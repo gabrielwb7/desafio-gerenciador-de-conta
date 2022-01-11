@@ -3,7 +3,7 @@ package com.desafio.manageraccount;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.repositories.AccountRepository;
-import com.desafio.manageraccount.repositories.ClientRepository;
+import com.desafio.manageraccount.services.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -17,7 +17,7 @@ import static com.desafio.manageraccount.entities.TypeAccount.LEGALPERSON;
 public class ManageraccountApplication implements CommandLineRunner {
 
 	@Autowired
-	private ClientRepository clientRepository;
+	private ClientService clientService;
 
 	@Autowired
 	private AccountRepository accountRepository;
@@ -34,7 +34,7 @@ public class ManageraccountApplication implements CommandLineRunner {
 
 		client.getAccountList().addAll(Arrays.asList(account));
 
-		clientRepository.save(client);
+		clientService.insertClient(client);
 		accountRepository.save(account);
 
 	}

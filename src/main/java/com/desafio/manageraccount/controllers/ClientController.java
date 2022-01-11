@@ -1,37 +1,47 @@
 package com.desafio.manageraccount.controllers;
 
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.repositories.ClientRepository;
+import com.desafio.manageraccount.exceptions.ClientNotFoundException;
+import com.desafio.manageraccount.services.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/clients")
 public class ClientController {
 
     @Autowired
-    private ClientRepository clientRepository;
+    private ClientService clientService;
 
     @GetMapping
-    public List<Client> findAll() {
-        List<Client> clientList = clientRepository.findAll();
-        return clientList;
+    public List<Client> clientList() {
+        return clientService.listAllClients();
     }
 
     @GetMapping(value = "/{id}")
-    public Client findById(@PathVariable Long id) {
-        Client client = clientRepository.findById(id).get();
-        return client;
+    public Client clientById(@PathVariable Long id) {
+        return clientService.clientById(id);
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Client insertClient(@RequestBody Client client) {
-        Client newCliente = clientRepository.save(client);
-        return newCliente;
+        return clientService.insertClient(client);
     }
 
 
+    @PutMapping("/{id}")
+    public Client updateEmployee (@PathVariable Long id, @RequestBody Client client) throws ClientNotFoundException {
+        return clientService.updateClient(id, client);
+    }
+
+
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteClient(@PathVariable Long id) throws ClientNotFoundException {
+        clientService.delete(id);
+    }
 }

@@ -13,12 +13,27 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String agency;
+
+    @Column(nullable = false)
     private String numberAccount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TypeAccount typeAccount;
+
+    @Column
     private String verifyingDigit;
+
+    @Column
     private Double balanceAccount;
+
+    @Column
     private Double valueWithdrawLimit;
+
+    @Column
     private Integer limitWithdrawals;
 
     @ManyToOne
