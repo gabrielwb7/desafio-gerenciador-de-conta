@@ -40,7 +40,14 @@ public class ClientService {
 
     public Client updateClient(Long id, Client client) {
         idIsExist(id);
-        Client updateClient = clientRepository.save(client);
+        Client updateClient = clientRepository.getById(id);
+        updateClient.setClientCPF(client.getClientCPF());
+        updateClient.setName(client.getName());
+        updateClient.setAddress(client.getAddress());
+        updateClient.setFoneNumber(client.getFoneNumber());
+
+        clientRepository.save(updateClient);
+
         return updateClient;
     }
 

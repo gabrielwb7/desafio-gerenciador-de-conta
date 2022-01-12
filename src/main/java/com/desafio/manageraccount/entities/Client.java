@@ -1,6 +1,8 @@
 package com.desafio.manageraccount.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -8,6 +10,8 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Data
+@NoArgsConstructor
 public class Client {
 
     @Id
@@ -30,58 +34,12 @@ public class Client {
     @OneToMany(mappedBy = "client")
     private List<Account> accountList = new ArrayList<>();
 
-    public Client() {}
-
     public Client(Long id,String name, String clientCPF, String foneNumber, String address) {
         this.id = id;
         this.name = name;
         this.clientCPF = clientCPF;
         this.foneNumber = foneNumber;
         this.address = address;
-    }
-
-    public void addAccount(Account account) {
-        accountList.add(account);
-    }
-
-    public void removeAccount(Account account) {
-        accountList.remove(account);
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getClientCPF() {
-        return clientCPF;
-    }
-
-    public String getFoneNumber() {
-        return foneNumber;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setFoneNumber(String foneNumber) {
-        this.foneNumber = foneNumber;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public List<Account> getAccountList() {
-        return accountList;
     }
 
     @Override

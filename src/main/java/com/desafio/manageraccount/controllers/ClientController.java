@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -34,12 +35,12 @@ public class ClientController {
 
 
     @PutMapping("/{id}")
-    public Client updateEmployee (@PathVariable Long id, @RequestBody Client client) throws ClientNotFoundException {
+    public Client updateClient(@PathVariable Long id, @RequestBody @Valid Client client) throws ClientNotFoundException {
         return clientService.updateClient(id, client);
     }
 
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClient(@PathVariable Long id) throws ClientNotFoundException {
         clientService.delete(id);

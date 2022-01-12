@@ -2,7 +2,7 @@ package com.desafio.manageraccount;
 
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.repositories.AccountRepository;
+import com.desafio.manageraccount.services.AccountService;
 import com.desafio.manageraccount.services.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -20,7 +20,7 @@ public class ManageraccountApplication implements CommandLineRunner {
 	private ClientService clientService;
 
 	@Autowired
-	private AccountRepository accountRepository;
+	private AccountService accountService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(ManageraccountApplication.class, args);
@@ -29,13 +29,13 @@ public class ManageraccountApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		Client client = new Client(null,"Gabriel", "126.251.926-82", "(34) 99337-7592", "teste");
+		Client client = new Client(null,"Gabriel", "111.222.333-44", "(33) 93333-2222", "teste");
 		Account account = new Account(null, "2222", "2111", LEGALPERSON, "2", 2000.00,800.00, 30, client);
 
 		client.getAccountList().addAll(Arrays.asList(account));
 
 		clientService.insertClient(client);
-		accountRepository.save(account);
+		accountService.insertAccount(account);
 
 	}
 
