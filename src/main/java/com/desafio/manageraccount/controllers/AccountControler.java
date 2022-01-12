@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/clients/accounts")
+@RequestMapping(value = "/accounts")
 public class AccountControler {
 
     @Autowired
@@ -26,12 +26,16 @@ public class AccountControler {
         return accountService.accountById(id);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Account insertAccount(@RequestBody Account account) {
-        return accountService.insertAccount(account);
-    }
+//    @GetMapping(value = "/accounts-client/{id}")
+//    public List<Account> accountsPerCustomer(@PathVariable Long id) {
+//        return accountService.accountsPerClient(id);
+//    }
 
+    @PostMapping(value = "/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Account insertAccount(@RequestBody Account account, @PathVariable Long id) {
+        return accountService.insertAccount(account, id);
+    }
 
     @PutMapping("/{id}")
     public Account updateAccount(@PathVariable Long id, @RequestBody Account account) throws AccountNotFoundException {

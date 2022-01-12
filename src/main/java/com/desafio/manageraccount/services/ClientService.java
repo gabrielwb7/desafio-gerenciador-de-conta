@@ -1,11 +1,13 @@
 package com.desafio.manageraccount.services;
 
+import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.repositories.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,7 +35,7 @@ public class ClientService {
         return newCliente;
     }
 
-    public void delete(Long id) {
+    public void deleteClientById(Long id) throws ClientNotFoundException{
         idIsExist(id);
         clientRepository.deleteById(id);
     }

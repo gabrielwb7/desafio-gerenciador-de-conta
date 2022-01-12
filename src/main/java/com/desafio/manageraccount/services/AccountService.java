@@ -1,11 +1,14 @@
 package com.desafio.manageraccount.services;
 
 import com.desafio.manageraccount.entities.Account;
+import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.repositories.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,8 +31,15 @@ public class AccountService {
         return account;
     }
 
-    public Account insertAccount(Account Account) {
-        Account newAccount = accountRepository.save(Account);
+    public Account insertAccount(Account account, Long id) {
+
+        String url = "http://localhost:8080/clients/" + id;
+        RestTemplate restTemplate = new RestTemplate();
+        Client client = restTemplate.getForObject(url, Client.class);
+
+        account.setClient(client);
+
+        Account newAccount = accountRepository.save(account);
         return newAccount;
     }
 
@@ -40,7 +50,14 @@ public class AccountService {
 
     public Account updateAccount(Long id, Account account) {
         idIsExist(id);
-        Account updateAccount = accountRepository.save(account);
+        Account updateAccount = accountRepository.getById(id);
+        updateAccount.setNumberAccount(account.getNumberAccount());
+        updateAccount.setTypeAccount(account.getTypeAccount());
+        updateAccount.setAgency(account.getAgency());
+        updateAccount.setVerifyingDigit(account.getVerifyingDigit());
+
+        accountRepository.save(updateAccount);
+
         return updateAccount;
     }
 
@@ -48,6 +65,12 @@ public class AccountService {
         Account account = accountRepository.findById(id).get();
         return account;
     }
+
+//    public List<Account> accountsPerClient(Long id) {
+//        Client client = clientRepository.findById(id).get();
+//        List<Account> allAccounts = new ArrayList<>(client.getAccountList());
+//        return allAccounts;
+//    }
 
     private Account idIsExist(Long id) {
         return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));

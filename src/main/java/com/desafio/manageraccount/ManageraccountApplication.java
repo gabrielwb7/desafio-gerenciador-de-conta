@@ -29,13 +29,13 @@ public class ManageraccountApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		Client client = new Client(null,"Gabriel", "111.222.333-44", "(33) 93333-2222", "teste");
-		Account account = new Account(null, "2222", "2111", LEGALPERSON, "2", 2000.00,800.00, 30, client);
+		Client client = new Client(1L,"Gabriel", "111.222.333-44", "(33) 93333-2222", "teste");
+		Account account = new Account(null, "2222", "2111", LEGALPERSON, "2", 2000.00,800.00, 30, client.getId());
 
 		client.getAccountList().addAll(Arrays.asList(account));
 
 		clientService.insertClient(client);
-		accountService.insertAccount(account);
+		accountService.insertAccount(account, client.getId());
 
 	}
 

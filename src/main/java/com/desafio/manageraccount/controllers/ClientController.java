@@ -1,5 +1,6 @@
 package com.desafio.manageraccount.controllers;
 
+import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.services.ClientService;
@@ -43,6 +44,6 @@ public class ClientController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClient(@PathVariable Long id) throws ClientNotFoundException {
-        clientService.delete(id);
+        clientService.deleteClientById(id);
     }
 }

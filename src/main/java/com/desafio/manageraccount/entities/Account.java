@@ -37,11 +37,12 @@ public class Account {
     @Column
     private Integer limitWithdrawals;
 
+
     @ManyToOne
     @JoinColumn(name = "client_id")
     private Client client;
 
-    public Account(Long id, String agency, String numberAccount, TypeAccount typeAccount, String verifyingDigit, Double balanceAccount, Double valueWithdrawLimit, Integer limitWithdrawals, Client client) {
+    public Account(Long id, String agency, String numberAccount, TypeAccount typeAccount, String verifyingDigit, Double balanceAccount, Double valueWithdrawLimit, Integer limitWithdrawals, Long idCliente) {
         this.id = id;
         this.agency = agency;
         this.numberAccount = numberAccount;
@@ -50,7 +51,6 @@ public class Account {
         this.balanceAccount = balanceAccount;
         this.valueWithdrawLimit = valueWithdrawLimit;
         this.limitWithdrawals = limitWithdrawals;
-        this.client = client;
     }
 
     @Override
