@@ -1,6 +1,8 @@
 package com.desafio.manageraccount.controllers;
 
 import com.desafio.manageraccount.entities.Account;
+import com.desafio.manageraccount.entities.response.MessageResponse;
+import com.desafio.manageraccount.exceptions.AccountAlreadyRegisteredException;
 import com.desafio.manageraccount.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,30 +24,29 @@ public class AccountControler {
     }
 
     @GetMapping(value = "/{id}")
-    public Account accountById(@PathVariable Long id) {
+    public Account accountById(@PathVariable Long id) throws AccountNotFoundException {
         return accountService.accountById(id);
     }
 
-//    @GetMapping(value = "/accounts-client/{id}")
-//    public List<Account> accountsPerCustomer(@PathVariable Long id) {
-//        return accountService.accountsPerClient(id);
-//    }
-
     @PostMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public Account insertAccount(@RequestBody Account account, @PathVariable Long id) {
+    public MessageResponse insertAccount(@RequestBody Account account, @PathVariable Long id) throws AccountAlreadyRegisteredException {
         return accountService.insertAccount(account, id);
     }
 
     @PutMapping("/{id}")
-    public Account updateAccount(@PathVariable Long id, @RequestBody Account account) throws AccountNotFoundException {
+    public MessageResponse updateAccount(@PathVariable Long id, @RequestBody Account account) throws AccountNotFoundException, AccountAlreadyRegisteredException {
         return accountService.updateAccount(id, account);
     }
-
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(@PathVariable Long id) throws AccountNotFoundException {
         accountService.delete(id);
     }
+
+//    @GetMapping(value = "/accounts-client/{id}")
+//    public List<Account> accountsPerCustomer(@PathVariable Long id) {
+//        return accountService.accountsPerClient(id);
+//    }
 }

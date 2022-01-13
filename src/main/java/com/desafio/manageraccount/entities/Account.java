@@ -15,15 +15,15 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TypeAccount typeAccount;
+
     @Column(nullable = false)
     private String agency;
 
     @Column(nullable = false)
     private String numberAccount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TypeAccount typeAccount;
 
     @Column
     private String verifyingDigit;
@@ -58,11 +58,11 @@ public class Account {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Account account = (Account) o;
-        return Objects.equals(id, account.id) && Objects.equals(agency, account.agency) && Objects.equals(numberAccount, account.numberAccount) && Objects.equals(verifyingDigit, account.verifyingDigit);
+        return typeAccount == account.typeAccount && Objects.equals(agency, account.agency) && Objects.equals(numberAccount, account.numberAccount) && Objects.equals(verifyingDigit, account.verifyingDigit);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, agency, numberAccount, verifyingDigit);
+        return Objects.hash(typeAccount, agency, numberAccount, verifyingDigit);
     }
 }
