@@ -47,11 +47,11 @@ public class Client {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Client client = (Client) o;
-        return Objects.equals(id, client.id) && Objects.equals(clientCPF, client.clientCPF);
+        return Objects.equals(clientCPF, client.clientCPF);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, clientCPF);
+        return Objects.hash(clientCPF);
     }
 }

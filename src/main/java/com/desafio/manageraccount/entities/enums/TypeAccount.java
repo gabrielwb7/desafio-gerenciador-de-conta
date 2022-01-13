@@ -1,4 +1,4 @@
-package com.desafio.manageraccount.entities;
+package com.desafio.manageraccount.entities.enums;
 
 public enum TypeAccount {
 

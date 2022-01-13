@@ -1,6 +1,10 @@
 package com.desafio.manageraccount.services;
 
+import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
+import com.desafio.manageraccount.entities.response.MessageResponse;
+import com.desafio.manageraccount.exceptions.AccountAlreadyRegisteredException;
+import com.desafio.manageraccount.exceptions.ClientAlreadyRegisteredException;
 import com.desafio.manageraccount.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.repositories.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,40 +27,49 @@ public class ClientService {
         return allClients;
     }
 
-    public Client returnOneClient (Long id) throws ClientNotFoundException {
-        Client client = idIsExist(id);
-        return client;
-    }
-
-    public Client insertClient(Client client) {
+    public MessageResponse insertClient(Client client) {
+        theCPFIsRegistered(client);
         Client newCliente = clientRepository.save(client);
-        return newCliente;
+        return createMessageResponse(String.format("Cliente com o ID %d foi criado com sucesso", newCliente.getId()));
     }
 
-    public void deleteClientById(Long id) throws ClientNotFoundException{
+    public void deleteClientById(Long id) {
         idIsExist(id);
         clientRepository.deleteById(id);
     }
 
-    public Client updateClient(Long id, Client client) throws ClientNotFoundException {
+    public MessageResponse updateClient(Long id, Client client) {
         idIsExist(id);
         Client updateClient = clientRepository.getById(id);
-        updateClient.setClientCPF(client.getClientCPF());
         updateClient.setName(client.getName());
         updateClient.setAddress(client.getAddress());
         updateClient.setFoneNumber(client.getFoneNumber());
 
         clientRepository.save(updateClient);
 
-        return updateClient;
+        return createMessageResponse(String.format("Cliente com o ID %d foi atualizado", updateClient.getId()));
     }
 
     public Client clientById(Long id) {
+        idIsExist(id);
         Client client = clientRepository.findById(id).get();
         return client;
     }
 
-    private Client idIsExist(Long id) throws ClientNotFoundException {
+    private Client idIsExist(Long id) {
       return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(id));
+    }
+
+    private void theCPFIsRegistered(Client newClient) {
+        List<Client> allClients = clientRepository.findAll();
+        for (Client client : allClients) {
+            if (client.equals(newClient)) {
+                throw new ClientAlreadyRegisteredException(String.format("O CPF %s informado já está cadastrado", newClient.getClientCPF()));
+            }
+        }
+    }
+
+    private MessageResponse createMessageResponse (String textMessage) {
+        return MessageResponse.builder().message(textMessage).build();
     }
 }

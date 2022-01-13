@@ -1,9 +1,13 @@
 package com.desafio.manageraccount.entities;
 
+import com.desafio.manageraccount.entities.enums.TypeAccount;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -25,24 +29,27 @@ public class Account {
     @Column(nullable = false)
     private String numberAccount;
 
-    @Column
+    @Column(nullable = false)
     private String verifyingDigit;
 
-    @Column
+    @Column(nullable = false)
     private Double balanceAccount;
 
-    @Column
+    @Column(nullable = false)
     private Double valueWithdrawLimit;
 
-    @Column
+    @Column(nullable = false)
     private Integer limitWithdrawals;
-
 
     @ManyToOne
     @JoinColumn(name = "client_id")
     private Client client;
 
-    public Account(Long id, String agency, String numberAccount, TypeAccount typeAccount, String verifyingDigit, Double balanceAccount, Double valueWithdrawLimit, Integer limitWithdrawals, Long idCliente) {
+    @JsonIgnore
+    @OneToMany(mappedBy = "operations")
+    private List<BankingOperations> operationsList = new ArrayList<>();
+
+    public Account(Long id, String agency, String numberAccount, TypeAccount typeAccount, String verifyingDigit, Double balanceAccount, Double valueWithdrawLimit, Integer limitWithdrawals) {
         this.id = id;
         this.agency = agency;
         this.numberAccount = numberAccount;

@@ -13,8 +13,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
-import static com.desafio.manageraccount.entities.TypeAccount.GOVERNMENTPERSON;
-import static com.desafio.manageraccount.entities.TypeAccount.REGULARPERSON;
+import static com.desafio.manageraccount.entities.enums.TypeAccount.GOVERNMENTPERSON;
+import static com.desafio.manageraccount.entities.enums.TypeAccount.REGULARPERSON;
 
 @Service
 public class AccountService {
@@ -31,11 +31,6 @@ public class AccountService {
         return allAccounts;
     }
 
-    public Account returnOneAccount(Long id) {
-        Account account = idIsExist(id);
-        return account;
-    }
-
     public MessageResponse insertAccount(Account account, Long id) {
 
         thisAccountAlreadyExists(account);
@@ -50,8 +45,8 @@ public class AccountService {
 
         account.setClient(client);
 
-        Account newAccount = accountRepository.save(account);
-        return createMessageResponse(String.format("Conta com o ID %d foi criada com sucesso!!", newAccount.getId()));
+        accountRepository.save(account);
+        return createMessageResponse(String.format("Conta com o ID %d foi criada com sucess!!", account.getId()));
     }
 
     public void delete(Long id) {
