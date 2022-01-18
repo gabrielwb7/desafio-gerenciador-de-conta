@@ -1,9 +1,8 @@
 package com.desafio.manageraccount.services;
 
-import com.desafio.manageraccount.entities.Account;
+import com.desafio.manageraccount.dto.request.ClientDTO;
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.entities.response.MessageResponse;
-import com.desafio.manageraccount.exceptions.AccountAlreadyRegisteredException;
+import com.desafio.manageraccount.dto.response.MessageResponse;
 import com.desafio.manageraccount.exceptions.ClientAlreadyRegisteredException;
 import com.desafio.manageraccount.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.repositories.ClientRepository;
@@ -11,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ClientService {
@@ -27,10 +27,12 @@ public class ClientService {
         return allClients;
     }
 
-    public MessageResponse insertClient(Client client) {
-        theCPFIsRegistered(client);
-        Client newCliente = clientRepository.save(client);
-        return createMessageResponse(String.format("Cliente com o ID %d foi criado com sucesso", newCliente.getId()));
+    public MessageResponse insertClient(ClientDTO clientDTO) {
+        if (!Objects.isNull(clientRepository.getClientByClientCPF(clientDTO.getClientCPF()))) {
+            throw new ClientAlreadyRegisteredException("O CPF já está cadastrado.");
+        }
+        Client newClient = clientRepository.save(clientDTO.toDTO());
+        return createMessageResponse(String.format("Cliente com o ID %d foi criado com sucesso", newClient.getId()));
     }
 
     public void deleteClientById(Long id) {
@@ -38,12 +40,12 @@ public class ClientService {
         clientRepository.deleteById(id);
     }
 
-    public MessageResponse updateClient(Long id, Client client) {
+    public MessageResponse updateClient(Long id, ClientDTO clientDTO) {
         idIsExist(id);
         Client updateClient = clientRepository.getById(id);
-        updateClient.setName(client.getName());
-        updateClient.setAddress(client.getAddress());
-        updateClient.setFoneNumber(client.getFoneNumber());
+        updateClient.setName(clientDTO.getName());
+        updateClient.setAddress(clientDTO.getAddress());
+        updateClient.setPhoneNumber(clientDTO.getPhoneNumber());
 
         clientRepository.save(updateClient);
 
@@ -58,15 +60,6 @@ public class ClientService {
 
     private Client idIsExist(Long id) {
       return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(id));
-    }
-
-    private void theCPFIsRegistered(Client newClient) {
-        List<Client> allClients = clientRepository.findAll();
-        for (Client client : allClients) {
-            if (client.equals(newClient)) {
-                throw new ClientAlreadyRegisteredException(String.format("O CPF %s informado já está cadastrado", newClient.getClientCPF()));
-            }
-        }
     }
 
     private MessageResponse createMessageResponse (String textMessage) {

@@ -1,9 +1,8 @@
 package com.desafio.manageraccount.controllers;
 
-import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.entities.response.MessageResponse;
-import com.desafio.manageraccount.exceptions.ClientNotFoundException;
+import com.desafio.manageraccount.dto.request.ClientDTO;
+import com.desafio.manageraccount.dto.response.MessageResponse;
 import com.desafio.manageraccount.services.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,14 +30,14 @@ public class ClientController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponse insertClient(@RequestBody Client client) {
-        return clientService.insertClient(client);
+    public MessageResponse insertClient(@RequestBody  @Valid ClientDTO clientDTO) {
+        return clientService.insertClient(clientDTO);
     }
 
 
     @PutMapping("/{id}")
-    public MessageResponse updateClient(@PathVariable Long id, @RequestBody @Valid Client client) {
-        return clientService.updateClient(id, client);
+    public MessageResponse updateClient(@PathVariable Long id, @RequestBody @Valid ClientDTO clientDTO) {
+        return clientService.updateClient(id, clientDTO);
     }
 
 

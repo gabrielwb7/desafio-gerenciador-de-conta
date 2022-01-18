@@ -2,8 +2,15 @@ package com.desafio.manageraccount.entities.enums;
 
 public enum TypeAccount {
 
-    LEGALPERSON,
-    REGULARPERSON,
-    GOVERNMENTPERSON;
+    LEGALPERSON(50, 10.0),
+    REGULARPERSON(5, 10.0),
+    GOVERNMENTPERSON(250, 20.0);
 
+    private Integer maxLimitWithdrawals;
+    private Double tax;
+
+    TypeAccount(Integer maxLimitWithdrawals, Double tax) {
+        this.maxLimitWithdrawals = maxLimitWithdrawals;
+        this.tax = tax;
+    }
 }

@@ -1,6 +1,7 @@
 package com.desafio.manageraccount.entities;
 
 import com.desafio.manageraccount.entities.enums.TypeOperations;
+import com.desafio.manageraccount.entities.enums.TypeStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,28 +25,29 @@ public class BankingOperations {
     private Double amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "tipoOperação", nullable = false)
     private TypeOperations typeOperations;
 
-    @Column(nullable = false)
-    private Double rate;
+    @Column
+    private Double rate = 0.0;
 
     @Column(nullable = false)
     private Long idDestinyAccount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TypeStatus typeStatus = TypeStatus.NOSTARTER;
 
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;
 
 
-    public BankingOperations(Long idOperation, Date dateOperation, Double amount, TypeOperations typeOperations, Double rate, Long idDestinyAccount, Account account) {
+    public BankingOperations(Long idOperation, Double amount, TypeOperations typeOperations, Long idDestinyAccount) {
         this.idOperation = idOperation;
-        this.dateOperation = dateOperation;
         this.amount = amount;
         this.typeOperations = typeOperations;
-        this.rate = rate;
         this.idDestinyAccount = idDestinyAccount;
-        this.account = account;
     }
 
     @Override

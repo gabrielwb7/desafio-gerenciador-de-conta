@@ -1,20 +1,17 @@
 package com.desafio.manageraccount.services;
 
+import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.entities.response.MessageResponse;
+import com.desafio.manageraccount.dto.response.MessageResponse;
 import com.desafio.manageraccount.exceptions.AccountAlreadyRegisteredException;
 import com.desafio.manageraccount.exceptions.AccountNotFoundException;
-import com.desafio.manageraccount.exceptions.InvalidWithdrawExceptions;
 import com.desafio.manageraccount.repositories.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-
-import static com.desafio.manageraccount.entities.enums.TypeAccount.GOVERNMENTPERSON;
-import static com.desafio.manageraccount.entities.enums.TypeAccount.REGULARPERSON;
 
 @Service
 public class AccountService {
@@ -31,22 +28,20 @@ public class AccountService {
         return allAccounts;
     }
 
-    public MessageResponse insertAccount(Account account, Long id) {
+    public MessageResponse insertAccount(AccountDTO accountDTO, Long id) {
 
-        thisAccountAlreadyExists(account);
-
-        if (!theLimitWithdrawalsIsCorrect(account)) {
-            throw new InvalidWithdrawExceptions("Limite de saques gratuitos não está de acordo com o tipo da conta");
-        }
+        thisAccountAlreadyExists(accountDTO);
 
         String url = "http://localhost:8080/clients/" + id;
         RestTemplate restTemplate = new RestTemplate();
         Client client = restTemplate.getForObject(url, Client.class);
 
+        Account account = accountRepository.save(accountDTO.toDTO());
         account.setClient(client);
 
         accountRepository.save(account);
-        return createMessageResponse(String.format("Conta com o ID %d foi criada com sucess!!", account.getId()));
+
+        return createMessageResponse(String.format("Conta com o ID %d foi criada com sucesso!", account.getId()));
     }
 
     public void delete(Long id) {
@@ -54,18 +49,15 @@ public class AccountService {
         accountRepository.deleteById(id);
     }
 
-    public MessageResponse updateAccount(Long id, Account account) {
+    public MessageResponse updateAccount(Long id, AccountDTO accountDTO) {
         idIsExist(id);
-        thisAccountAlreadyExists(account);
-        if (!theLimitWithdrawalsIsCorrect(account)) {
-            throw new InvalidWithdrawExceptions("Limite de saques gratuitos não está de acordo com o tipo de conta");
-        }
+        thisAccountAlreadyExists(accountDTO);
 
         Account updateAccount = accountRepository.getById(id);
-        updateAccount.setNumberAccount(account.getNumberAccount());
-        updateAccount.setTypeAccount(account.getTypeAccount());
-        updateAccount.setAgency(account.getAgency());
-        updateAccount.setVerifyingDigit(account.getVerifyingDigit());
+        updateAccount.setNumberAccount(accountDTO.getNumberAccount());
+        updateAccount.setTypeAccount(accountDTO.getTypeAccount());
+        updateAccount.setAgency(accountDTO.getAgency());
+        updateAccount.setVerifyDigit(accountDTO.getVerifyDigit());
 
         accountRepository.save(updateAccount);
         return createMessageResponse(String.format("Conta com o ID %d foi atualizada", updateAccount.getId()));
@@ -77,36 +69,28 @@ public class AccountService {
         return account;
     }
 
-    private Account idIsExist(Long id) {
-        return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
+    public MessageResponse consultBalance(Long id) {
+        idIsExist(id);
+        Account account = accountRepository.findById(id).get();
+        return createMessageResponse(String.valueOf(account));
     }
 
-    private boolean theLimitWithdrawalsIsCorrect(Account account) {
-        if(account.getTypeAccount() == GOVERNMENTPERSON && account.getLimitWithdrawals() > 250) {
-            return false;
-        }
-        if(account.getTypeAccount() == REGULARPERSON && account.getLimitWithdrawals() > 5) {
-            return false;
-        }
-        if(account.getLimitWithdrawals() > 50) {
-            return false;
-        }
-        return true;
+    private Account idIsExist(Long id) {
+        return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
     }
 
     private MessageResponse createMessageResponse (String textMessage) {
         return MessageResponse.builder().message(textMessage).build();
     }
 
-    private void thisAccountAlreadyExists(Account newAccount) {
+    private void thisAccountAlreadyExists(AccountDTO accountDTO) {
         List<Account> allAccounts = accountRepository.findAll();
         for (Account account : allAccounts) {
-            if (account.equals(newAccount)) {
+            if (account.equals(accountDTO.toDTO())) {
                 throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
             }
         }
     }
-
 
 //    public List<Account> accountsPerClient(Long id) {
 //        Client client = clientRepository.findById(id).get();
@@ -114,49 +98,5 @@ public class AccountService {
 //        return allAccounts;
 //    }
 
-//    public void deposit(Double amount) {
-//        balanceAccount += amount;
-//    };
-//
-//    public void withdraw(Double amount) {
-//        if (getTypeAccount() == GOVERNMENTPERSON) {
-//            if (amount > getBalanceAccount()) {
-//                throw new InvalidWithdrawExceptions("Não tem saldo suficiente para fazer o saque.");
-//            }
-//            if (getLimitWithdrawals() == 0 && amount + 20.0 > getBalanceAccount()) {
-//                throw new InvalidWithdrawExceptions("O limite de saques gratuitos acabou e não tem saldo suficiente para fazer devido a taxa de R$ 20,00.");
-//            }
-//            if (getLimitWithdrawals() == 0) {
-//                updateBalance(amount,20.0);
-//                decrementLimitWithdrawals();
-//            } else  {
-//                updateBalance(amount, 0.0);
-//                decrementLimitWithdrawals();
-//            }
-//        }
-//        else {
-//
-//            if (amount > getBalanceAccount()) {
-//                throw new InvalidWithdrawExceptions("Não tem saldo suficiente para fazer o saque.");
-//            }
-//            if (getLimitWithdrawals() == 0 && amount + 10.0 > getBalanceAccount()) {
-//                throw new InvalidWithdrawExceptions("O limite de saques gratuitos acabou e não tem saldo suficiente para fazer devido a taxa de R$ 10,00.");
-//            }
-//            if (getLimitWithdrawals() == 0) {
-//                updateBalance(amount, 10.0);
-//                decrementLimitWithdrawals();
-//            } else {
-//                updateBalance(amount, 0.0);
-//                decrementLimitWithdrawals();
-//            }
-//        }
-//    }
-//
-//    public void updateBalance(Double amount, Double rate) {
-//        balanceAccount -= amount + rate;
-//    }
-//
-//    public void decrementLimitWithdrawals () {
-//        limitWithdrawals -= 1;
-//    }
+
 }

@@ -1,7 +1,8 @@
 package com.desafio.manageraccount.controllers;
 
+import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
-import com.desafio.manageraccount.entities.response.MessageResponse;
+import com.desafio.manageraccount.dto.response.MessageResponse;
 import com.desafio.manageraccount.exceptions.AccountAlreadyRegisteredException;
 import com.desafio.manageraccount.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.AccountService;
@@ -28,15 +29,20 @@ public class AccountControler {
         return accountService.accountById(id);
     }
 
+    @GetMapping(value = "/balance/{id}")
+    public MessageResponse consultBalance(@PathVariable Long id) throws AccountNotFoundException {
+        return accountService.consultBalance(id);
+    }
+
     @PostMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponse insertAccount(@RequestBody Account account, @PathVariable Long id) throws AccountAlreadyRegisteredException {
-        return accountService.insertAccount(account, id);
+    public MessageResponse insertAccount(@RequestBody AccountDTO accountDTO, @PathVariable Long id) throws AccountAlreadyRegisteredException {
+        return accountService.insertAccount(accountDTO, id);
     }
 
     @PutMapping("/{id}")
-    public MessageResponse updateAccount(@PathVariable Long id, @RequestBody Account account) throws AccountNotFoundException, AccountAlreadyRegisteredException {
-        return accountService.updateAccount(id, account);
+    public MessageResponse updateAccount(@PathVariable Long id, @RequestBody AccountDTO accountDTO) throws AccountNotFoundException, AccountAlreadyRegisteredException {
+        return accountService.updateAccount(id, accountDTO);
     }
 
     @DeleteMapping("/{id}")

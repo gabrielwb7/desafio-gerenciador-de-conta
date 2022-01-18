@@ -1,4 +1,4 @@
-package com.desafio.manageraccount.entities.response;
+package com.desafio.manageraccount.dto.response;
 
 import lombok.Builder;
 import lombok.Data;

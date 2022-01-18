@@ -1,17 +1,25 @@
 package com.desafio.manageraccount.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+@Table(name = "client")
 public class Client {
 
     @Id
@@ -19,26 +27,28 @@ public class Client {
     private Long id;
 
     @Column(nullable = false)
+    @Size(max = 100)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String clientCPF;
 
     @Column(nullable = false)
-    private String foneNumber;
+    @Size(min = 10, max = 11)
+    private String phoneNumber;
 
     @Column(nullable = false)
+    @Size(min = 5, max = 250)
     private String address;
 
     @JsonIgnore
     @OneToMany(mappedBy = "client")
     private List<Account> accountList = new ArrayList<>();
 
-    public Client(Long id,String name, String clientCPF, String foneNumber, String address) {
-        this.id = id;
+    public Client(String name, String clientCPF, String phoneNumber, String address) {
         this.name = name;
         this.clientCPF = clientCPF;
-        this.foneNumber = foneNumber;
+        this.phoneNumber = phoneNumber;
         this.address = address;
     }
 
