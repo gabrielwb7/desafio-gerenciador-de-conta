@@ -30,8 +30,11 @@ public class Client {
     @Size(max = 100)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String clientCPF;
+
+    @Column(unique = true)
+    private String clientCNPJ;
 
     @Column(nullable = false)
     @Size(min = 10, max = 11)
@@ -45,9 +48,10 @@ public class Client {
     @OneToMany(mappedBy = "client")
     private List<Account> accountList = new ArrayList<>();
 
-    public Client(String name, String clientCPF, String phoneNumber, String address) {
+    public Client(String name, String clientCPF, String clientCNPJ , String phoneNumber, String address) {
         this.name = name;
         this.clientCPF = clientCPF;
+        this.clientCNPJ = clientCNPJ;
         this.phoneNumber = phoneNumber;
         this.address = address;
     }

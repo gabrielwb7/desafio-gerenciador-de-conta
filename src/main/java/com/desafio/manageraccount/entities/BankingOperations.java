@@ -12,6 +12,7 @@ import java.util.Objects;
 @Entity
 @Data
 @NoArgsConstructor
+@Table
 public class BankingOperations {
 
     @Id
@@ -24,14 +25,11 @@ public class BankingOperations {
     @Column(nullable = false)
     private Double amount;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipoOperação", nullable = false)
     private TypeOperations typeOperations;
 
-    @Column
-    private Double rate = 0.0;
-
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long idDestinyAccount;
 
     @Enumerated(EnumType.STRING)
@@ -43,8 +41,7 @@ public class BankingOperations {
     private Account account;
 
 
-    public BankingOperations(Long idOperation, Double amount, TypeOperations typeOperations, Long idDestinyAccount) {
-        this.idOperation = idOperation;
+    public BankingOperations(Double amount, TypeOperations typeOperations, Long idDestinyAccount) {
         this.amount = amount;
         this.typeOperations = typeOperations;
         this.idDestinyAccount = idDestinyAccount;
@@ -55,11 +52,11 @@ public class BankingOperations {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BankingOperations that = (BankingOperations) o;
-        return Objects.equals(idOperation, that.idOperation) && Objects.equals(dateOperation, that.dateOperation) && Objects.equals(amount, that.amount) && typeOperations == that.typeOperations && Objects.equals(rate, that.rate) && Objects.equals(idDestinyAccount, that.idDestinyAccount) && Objects.equals(account, that.account);
+        return Objects.equals(idOperation, that.idOperation) && Objects.equals(dateOperation, that.dateOperation) && Objects.equals(amount, that.amount) && typeOperations == that.typeOperations && Objects.equals(idDestinyAccount, that.idDestinyAccount) && Objects.equals(account, that.account);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idOperation, dateOperation, amount, typeOperations, rate, idDestinyAccount, account);
+        return Objects.hash(idOperation, dateOperation, amount, typeOperations, idDestinyAccount, account);
     }
 }

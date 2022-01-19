@@ -2,10 +2,9 @@ package com.desafio.manageraccount.services;
 
 import com.desafio.manageraccount.dto.request.ClientDTO;
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.dto.response.MessageResponse;
-import com.desafio.manageraccount.exceptions.ClientAlreadyRegisteredException;
-import com.desafio.manageraccount.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.repositories.ClientRepository;
+import com.desafio.manageraccount.services.exceptions.ClientNotFoundException;
+import com.desafio.manageraccount.services.exceptions.DocumentationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,12 +26,20 @@ public class ClientService {
         return allClients;
     }
 
-    public MessageResponse insertClient(ClientDTO clientDTO) {
-        if (!Objects.isNull(clientRepository.getClientByClientCPF(clientDTO.getClientCPF()))) {
-            throw new ClientAlreadyRegisteredException("O CPF já está cadastrado.");
+    public Client insertClient(ClientDTO clientDTO) {
+
+        if (clientDTO.getClientCPF() == null && clientDTO.getClientCNPJ() == null) {
+            throw new DocumentationException("Você precisa informar um CPF ou CNPJ para efetuar o cadastro");
         }
-        Client newClient = clientRepository.save(clientDTO.toDTO());
-        return createMessageResponse(String.format("Cliente com o ID %d foi criado com sucesso", newClient.getId()));
+        if (!Objects.isNull(clientRepository.getClientByClientCPF(clientDTO.getClientCPF()))) {
+            throw new DocumentationException("O CPF já está cadastrado.");
+        }
+        if (clientDTO.getClientCNPJ() != null) {
+            if (!Objects.isNull(clientRepository.getClientByClientCNPJ(clientDTO.getClientCNPJ()))) {
+                throw new DocumentationException("O CNPJ já está cadastrado.");
+            }
+        }
+        return  clientRepository.save(clientDTO.toDTO());
     }
 
     public void deleteClientById(Long id) {
@@ -40,16 +47,15 @@ public class ClientService {
         clientRepository.deleteById(id);
     }
 
-    public MessageResponse updateClient(Long id, ClientDTO clientDTO) {
+    public Client updateClient(Long id, ClientDTO clientDTO) {
         idIsExist(id);
+        Client update = clientRepository.save(clientDTO.toDTO());
         Client updateClient = clientRepository.getById(id);
-        updateClient.setName(clientDTO.getName());
-        updateClient.setAddress(clientDTO.getAddress());
-        updateClient.setPhoneNumber(clientDTO.getPhoneNumber());
+        updateClient.setName(update.getName());
+        updateClient.setAddress(update.getAddress());
+        updateClient.setPhoneNumber(update.getPhoneNumber());
 
-        clientRepository.save(updateClient);
-
-        return createMessageResponse(String.format("Cliente com o ID %d foi atualizado", updateClient.getId()));
+        return clientRepository.save(updateClient);
     }
 
     public Client clientById(Long id) {
@@ -60,9 +66,5 @@ public class ClientService {
 
     private Client idIsExist(Long id) {
       return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(id));
-    }
-
-    private MessageResponse createMessageResponse (String textMessage) {
-        return MessageResponse.builder().message(textMessage).build();
     }
 }

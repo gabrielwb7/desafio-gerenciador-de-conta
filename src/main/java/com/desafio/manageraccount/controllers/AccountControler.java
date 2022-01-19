@@ -2,14 +2,14 @@ package com.desafio.manageraccount.controllers;
 
 import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
-import com.desafio.manageraccount.dto.response.MessageResponse;
-import com.desafio.manageraccount.exceptions.AccountAlreadyRegisteredException;
-import com.desafio.manageraccount.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -20,39 +20,37 @@ public class AccountControler {
     private AccountService accountService;
 
     @GetMapping
-    public List<Account> accountList() {
-        return accountService.listAllAccounts();
+    public ResponseEntity<List<Account>> accountList() {
+        return ResponseEntity.ok().body(accountService.listAllAccounts());
     }
 
     @GetMapping(value = "/{id}")
-    public Account accountById(@PathVariable Long id) throws AccountNotFoundException {
-        return accountService.accountById(id);
+    public ResponseEntity<Account> accountById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(accountService.accountById(id));
     }
 
     @GetMapping(value = "/balance/{id}")
-    public MessageResponse consultBalance(@PathVariable Long id) throws AccountNotFoundException {
-        return accountService.consultBalance(id);
+    public ResponseEntity<String> consultBalance(@PathVariable Long id) {
+        return ResponseEntity.ok().body(accountService.consultBalance(id));
     }
 
     @PostMapping(value = "/{id}")
-    @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponse insertAccount(@RequestBody AccountDTO accountDTO, @PathVariable Long id) throws AccountAlreadyRegisteredException {
-        return accountService.insertAccount(accountDTO, id);
+    public ResponseEntity<Account> insertAccount(@RequestBody @Valid AccountDTO accountDTO, @PathVariable Long id) {
+        Account account = accountService.insertAccount(accountDTO, id);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(account.getId()).toUri();
+        return ResponseEntity.created(uri).body(account);
     }
 
     @PutMapping("/{id}")
-    public MessageResponse updateAccount(@PathVariable Long id, @RequestBody AccountDTO accountDTO) throws AccountNotFoundException, AccountAlreadyRegisteredException {
-        return accountService.updateAccount(id, accountDTO);
+    public ResponseEntity<Account> updateAccount(@PathVariable Long id, @RequestBody @Valid AccountDTO accountDTO) {
+        return ResponseEntity.ok().body(accountService.updateAccount(id, accountDTO));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAccount(@PathVariable Long id) throws AccountNotFoundException {
+    public ResponseEntity<Void> deleteAccount(@PathVariable Long id) {
         accountService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
-//    @GetMapping(value = "/accounts-client/{id}")
-//    public List<Account> accountsPerCustomer(@PathVariable Long id) {
-//        return accountService.accountsPerClient(id);
-//    }
 }

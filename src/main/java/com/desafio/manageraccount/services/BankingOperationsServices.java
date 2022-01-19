@@ -4,10 +4,10 @@ import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.BankingOperations;
 import com.desafio.manageraccount.entities.enums.TypeOperations;
 import com.desafio.manageraccount.entities.enums.TypeStatus;
-import com.desafio.manageraccount.dto.response.MessageResponse;
-import com.desafio.manageraccount.exceptions.BankingOperationsNotFound;
 import com.desafio.manageraccount.repositories.AccountRepository;
 import com.desafio.manageraccount.repositories.BankingOperationsRepository;
+import com.desafio.manageraccount.services.exceptions.BankingOperationsNotFound;
+import com.desafio.manageraccount.services.exceptions.InvalidOperationExceptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -32,41 +32,39 @@ public class BankingOperationsServices {
         return operations;
     }
 
-    public MessageResponse insertOperation(BankingOperations operation, Long id) {
+    public BankingOperations insertOperation(BankingOperations operation, Long id) {
+        if (operation.getAmount() <= 0) {
+          throw new InvalidOperationExceptions("Valor da operação inválida");
+        }
 
         BankingOperations newOperation = bankingOperationsRepository.save(operation);
         newOperation.setAccount(thisAccountIsExist(id));
 
-        MessageResponse messageResponse = null;
-
         if (newOperation.getTypeOperations() == TypeOperations.DEPOSIT) {
             if (deposit(id, newOperation.getAmount())) {
                 newOperation.setTypeStatus(TypeStatus.CONCLUDED);
-                messageResponse = createMessageResponse(String.format("Operação de deposito com o ID %d foi efetuada com sucesso", newOperation.getIdOperation()));
+                return bankingOperationsRepository.save(newOperation);
             }
         }
 //        else if (newOperation.getTypeOperations() == TypeOperations.WITHDRAW) {
 //            if (withdraw(id, newOperation.getAmount())) {
 //                newOperation.setTypeStatus(TypeStatus.CONCLUDED);
-//                messageResponse = createMessageResponse(String.format("Operação de saque com o ID %d foi efetuada com sucesso", newOperation.getIdOperation()));
+//                return bankingOperationsRepository.save(newOperation);
 //            }
 //            newOperation.setTypeStatus(TypeStatus.CANCELED);
 //        }
         else if (newOperation.getTypeOperations() == TypeOperations.BANKTRANSFER){
             if (banktransfer(id, newOperation.getIdDestinyAccount(), newOperation.getAmount())) {
                 newOperation.setTypeStatus(TypeStatus.CONCLUDED);
-                messageResponse = createMessageResponse(String.format("Operação de transferência com o ID %d foi efetuada com sucesso", newOperation.getIdOperation()));
+                return bankingOperationsRepository.save(newOperation);
             }
             newOperation.setTypeStatus(TypeStatus.CANCELED);
         }
         else {
-            messageResponse = createMessageResponse(String.format("Tipo de operação inválida: %s", newOperation.getTypeOperations()));
+            throw new InvalidOperationExceptions(String.format("Tipo de operação inválida: %s", newOperation.getTypeOperations()));
         }
 
-        bankingOperationsRepository.save(newOperation);
-
-
-        return messageResponse;
+        return bankingOperationsRepository.save(newOperation);
     }
 
     private Account thisAccountIsExist(Long id) {
@@ -104,8 +102,8 @@ public class BankingOperationsServices {
         return true;
     }
 
-//    private boolean withdraw(Long id, Double amount) {
-//        boolean sucess = false;
+//    private void withdraw(Long id, Double amount) {
+//
 //        Account account = thisAccountIsExist(id);
 //
 //        if (account.getTypeAccount() == GOVERNMENTPERSON) {
@@ -118,11 +116,11 @@ public class BankingOperationsServices {
 //            else if (account.getLimitWithdrawals() == 0) {
 //                updateBalance(account.getId(), amount, 0.0);
 //                decrementLimitWithdrawals(account.getId());
-//                sucess = true;
+//
 //            } else  {
 //                updateBalance(account.getId(), amount, 0.0);
 //                decrementLimitWithdrawals(account.getId());
-//                sucess = true;
+//
 //            }
 //        }
 //        else {
@@ -136,14 +134,14 @@ public class BankingOperationsServices {
 //            else if (account.getLimitWithdrawals() == 0) {
 //                updateBalance(account.getId(), amount, 10.0);
 //                decrementLimitWithdrawals(account.getId());
-//                sucess = true;
+//
 //            } else {
 //                updateBalance(account.getId(), amount, 0.0);
 //                decrementLimitWithdrawals(account.getId());
-//                sucess = true;
+//
 //            }
 //        }
-//        return sucess;
+//
 //    }
 
     private void updateBalance(Long id,Double amount, Double rate) {
@@ -168,8 +166,4 @@ public class BankingOperationsServices {
         return bankingOperationsRepository.findById(id).orElseThrow(() -> new BankingOperationsNotFound(id));
     }
 
-
-    private MessageResponse createMessageResponse (String textMessage) {
-        return MessageResponse.builder().message(textMessage).build();
-    }
 }

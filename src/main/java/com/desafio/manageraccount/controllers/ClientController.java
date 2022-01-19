@@ -1,14 +1,15 @@
 package com.desafio.manageraccount.controllers;
 
-import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.dto.request.ClientDTO;
-import com.desafio.manageraccount.dto.response.MessageResponse;
+import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.services.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -19,31 +20,32 @@ public class ClientController {
     private ClientService clientService;
 
     @GetMapping
-    public List<Client> clientList() {
-        return clientService.listAllClients();
+    public ResponseEntity<List<Client>> clientList() {
+        return ResponseEntity.ok().body(clientService.listAllClients());
     }
 
     @GetMapping(value = "/{id}")
-    public Client clientById(@PathVariable Long id) {
-        return clientService.clientById(id);
+    public ResponseEntity<Client> clientById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(clientService.clientById(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponse insertClient(@RequestBody  @Valid ClientDTO clientDTO) {
-        return clientService.insertClient(clientDTO);
+    public ResponseEntity<Client> insertClient(@RequestBody  @Valid ClientDTO clientDTO) {
+        Client client = clientService.insertClient(clientDTO);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(client.getId()).toUri();
+        return ResponseEntity.created(uri).body(client);
     }
 
-
     @PutMapping("/{id}")
-    public MessageResponse updateClient(@PathVariable Long id, @RequestBody @Valid ClientDTO clientDTO) {
-        return clientService.updateClient(id, clientDTO);
+    public ResponseEntity<Client> updateClient (@PathVariable Long id, @RequestBody @Valid ClientDTO clientDTO) {
+        return ResponseEntity.ok().body(clientService.updateClient(id, clientDTO));
     }
 
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteClient(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         clientService.deleteClientById(id);
+        return ResponseEntity.noContent().build();
     }
 }

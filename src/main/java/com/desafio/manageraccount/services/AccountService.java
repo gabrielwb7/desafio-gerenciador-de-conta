@@ -3,10 +3,11 @@ package com.desafio.manageraccount.services;
 import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.dto.response.MessageResponse;
-import com.desafio.manageraccount.exceptions.AccountAlreadyRegisteredException;
-import com.desafio.manageraccount.exceptions.AccountNotFoundException;
+import com.desafio.manageraccount.entities.enums.TypeAccount;
 import com.desafio.manageraccount.repositories.AccountRepository;
+import com.desafio.manageraccount.services.exceptions.AccountAlreadyRegisteredException;
+import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
+import com.desafio.manageraccount.services.exceptions.DocumentationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -28,7 +29,7 @@ public class AccountService {
         return allAccounts;
     }
 
-    public MessageResponse insertAccount(AccountDTO accountDTO, Long id) {
+    public Account insertAccount(AccountDTO accountDTO, Long id) {
 
         thisAccountAlreadyExists(accountDTO);
 
@@ -36,12 +37,13 @@ public class AccountService {
         RestTemplate restTemplate = new RestTemplate();
         Client client = restTemplate.getForObject(url, Client.class);
 
+        if (accountDTO.getTypeAccount() == TypeAccount.LEGALPERSON && client.getClientCNPJ() == null) {
+            throw new DocumentationException("O cliente não tem CNPJ cadastrado para abrir conta juridica");
+        }
         Account account = accountRepository.save(accountDTO.toDTO());
         account.setClient(client);
 
-        accountRepository.save(account);
-
-        return createMessageResponse(String.format("Conta com o ID %d foi criada com sucesso!", account.getId()));
+        return accountRepository.save(account);
     }
 
     public void delete(Long id) {
@@ -49,18 +51,16 @@ public class AccountService {
         accountRepository.deleteById(id);
     }
 
-    public MessageResponse updateAccount(Long id, AccountDTO accountDTO) {
+    public Account updateAccount(Long id, AccountDTO accountDTO) {
         idIsExist(id);
         thisAccountAlreadyExists(accountDTO);
 
         Account updateAccount = accountRepository.getById(id);
         updateAccount.setNumberAccount(accountDTO.getNumberAccount());
-        updateAccount.setTypeAccount(accountDTO.getTypeAccount());
         updateAccount.setAgency(accountDTO.getAgency());
         updateAccount.setVerifyDigit(accountDTO.getVerifyDigit());
 
-        accountRepository.save(updateAccount);
-        return createMessageResponse(String.format("Conta com o ID %d foi atualizada", updateAccount.getId()));
+        return accountRepository.save(updateAccount);
     }
 
     public Account accountById(Long id) {
@@ -69,18 +69,14 @@ public class AccountService {
         return account;
     }
 
-    public MessageResponse consultBalance(Long id) {
+    public String consultBalance(Long id) {
         idIsExist(id);
         Account account = accountRepository.findById(id).get();
-        return createMessageResponse(String.valueOf(account));
+        return String.format("Saldo: R$ %.2f", account.getBalanceAccount());
     }
 
     private Account idIsExist(Long id) {
         return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
-    }
-
-    private MessageResponse createMessageResponse (String textMessage) {
-        return MessageResponse.builder().message(textMessage).build();
     }
 
     private void thisAccountAlreadyExists(AccountDTO accountDTO) {
