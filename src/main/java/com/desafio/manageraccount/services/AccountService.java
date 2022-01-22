@@ -46,7 +46,7 @@ public class AccountService {
         Account account = accountRepository.save(accountDTO.toDTO());
         account.setClient(client);
 
-//        setWithdraws(account.getId());
+        setWithdraws(account.getId());
 
         return accountRepository.save(account);
     }
@@ -86,11 +86,11 @@ public class AccountService {
     }
 
 
-//    private void setWithdraws(Long id) {
-//        String url = "http://localhost:8090/withdrawals/v1/" + id;
-//        RestTemplate restTemplate = new RestTemplate();
-//        restTemplate.postForLocation(url,id);
-//    }
+    private void setWithdraws(Long id) {
+        String url = "http://localhost:8090/withdrawals/v1/" + id;
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.postForLocation(url,id);
+    }
 
 //    public List<Account> accountsPerClient(Long id) {
 //        Client client = clientRepository.findById(id).get();

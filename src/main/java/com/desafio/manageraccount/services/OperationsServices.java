@@ -12,6 +12,7 @@ import com.desafio.manageraccount.services.exceptions.BankingOperationsNotFound;
 import com.desafio.manageraccount.services.exceptions.InvalidOperationExceptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -106,26 +107,34 @@ public class OperationsServices {
         if (amount > account.getBalanceAccount()) {
             throw new InvalidOperationExceptions("Não tem saldo suficiente para fazer o saque.");
         }
-        if (verifyWithdrawals(account.getId()) <= account.getTypeAccount().getMaxLimitWithdrawals()) {
+        if (verifyWithdrawals(account.getId()) < account.getTypeAccount().getMaxLimitWithdrawals()) {
             account.setBalanceAccount((account.getBalanceAccount() - amount));
-            accountRepository.save(account);
-            updateWithdrawals(account.getId());
         }
-        if (verifyWithdrawals(account.getId()) > account.getTypeAccount().getMaxLimitWithdrawals()) {
+        else {
             if (account.getTypeAccount().getTax() + amount > account.getBalanceAccount()) {
                 throw new InvalidOperationExceptions("O limite de saques gratuitos acabou e não tem saldo suficiente para fazer devido a taxa:  " + account.getTypeAccount().getTax());
-            } else {
-                account.setBalanceAccount(account.getBalanceAccount() - (amount + account.getTypeAccount().getTax()));
-                accountRepository.save(account);
-                updateWithdrawals(account.getId());
             }
+
+            System.out.println(account.getBalanceAccount());
+            System.out.println(amount + account.getTypeAccount().getTax());
+
+            account.setBalanceAccount(account.getBalanceAccount() - (amount + account.getTypeAccount().getTax()));
         }
+        accountRepository.save(account);
+        updateWithdrawals(account.getId());
     }
 
     private void updateWithdrawals(Long id) {
+        String url = "http://localhost:8090/withdrawals/" + id;
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.put(url, id);
     }
 
     private Integer verifyWithdrawals(Long id) {
+        String url = "http://localhost:8090/withdrawals/" + id;
+        RestTemplate restTemplate = new RestTemplate();
+        Integer withdraw = restTemplate.getForObject(url, Integer.class);
+        return withdraw;
     }
 
     private Operations idIsExist(Long id) {
