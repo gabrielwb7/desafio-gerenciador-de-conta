@@ -49,11 +49,11 @@ public class ClientService {
 
     public Client updateClient(Long id, ClientDTO clientDTO) {
         idIsExist(id);
-        Client update = clientRepository.save(clientDTO.toDTO());
+
         Client updateClient = clientRepository.getById(id);
-        updateClient.setName(update.getName());
-        updateClient.setAddress(update.getAddress());
-        updateClient.setPhoneNumber(update.getPhoneNumber());
+        updateClient.setName(clientDTO.getName());
+        updateClient.setAddress(clientDTO.getAddress());
+        updateClient.setPhoneNumber(clientDTO.getPhoneNumber());
 
         return clientRepository.save(updateClient);
     }

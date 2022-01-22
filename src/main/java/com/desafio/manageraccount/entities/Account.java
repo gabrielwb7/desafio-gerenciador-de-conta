@@ -2,6 +2,7 @@ package com.desafio.manageraccount.entities;
 
 import com.desafio.manageraccount.entities.enums.TypeAccount;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import java.util.Objects;
 @Entity
 @Data
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Account {
 
     @Id
@@ -39,16 +41,13 @@ public class Account {
     @Column
     private Double balanceAccount = 0.0;
 
-//    @Column(nullable = false)
-//    private Integer limitWithdrawals;
-
     @ManyToOne
     @JoinColumn(name = "client_id")
     private Client client;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account")
-    private List<BankingOperations> operationsList = new ArrayList<>();
+    private List<Operations> operationsList = new ArrayList<>();
 
     public Account(String agency, String numberAccount, TypeAccount typeAccount, String verifyDigit) {
         this.agency = agency;
@@ -70,11 +69,4 @@ public class Account {
         return Objects.hash(typeAccount, agency, numberAccount, verifyDigit);
     }
 
-    @Override
-    public String toString() {
-        return "O saldo da conta " + numberAccount
-                + "-" + verifyDigit
-                + " da agencia " + agency
-                + " eh: R$ " + String.format("%.2f", balanceAccount);
-    }
 }

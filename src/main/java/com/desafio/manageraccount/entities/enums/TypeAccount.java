@@ -1,5 +1,8 @@
 package com.desafio.manageraccount.entities.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum TypeAccount {
 
     LEGALPERSON(50, 10.0),

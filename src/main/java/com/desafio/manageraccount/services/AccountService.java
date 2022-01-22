@@ -31,7 +31,9 @@ public class AccountService {
 
     public Account insertAccount(AccountDTO accountDTO, Long id) {
 
-        thisAccountAlreadyExists(accountDTO);
+        if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
+            throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
+        }
 
         String url = "http://localhost:8080/clients/" + id;
         RestTemplate restTemplate = new RestTemplate();
@@ -40,8 +42,11 @@ public class AccountService {
         if (accountDTO.getTypeAccount() == TypeAccount.LEGALPERSON && client.getClientCNPJ() == null) {
             throw new DocumentationException("O cliente não tem CNPJ cadastrado para abrir conta juridica");
         }
+
         Account account = accountRepository.save(accountDTO.toDTO());
         account.setClient(client);
+
+//        setWithdraws(account.getId());
 
         return accountRepository.save(account);
     }
@@ -53,8 +58,9 @@ public class AccountService {
 
     public Account updateAccount(Long id, AccountDTO accountDTO) {
         idIsExist(id);
-        thisAccountAlreadyExists(accountDTO);
-
+        if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
+            throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
+        }
         Account updateAccount = accountRepository.getById(id);
         updateAccount.setNumberAccount(accountDTO.getNumberAccount());
         updateAccount.setAgency(accountDTO.getAgency());
@@ -76,17 +82,15 @@ public class AccountService {
     }
 
     private Account idIsExist(Long id) {
-        return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
+        return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("A conta com o id " + id +"não existe"));
     }
 
-    private void thisAccountAlreadyExists(AccountDTO accountDTO) {
-        List<Account> allAccounts = accountRepository.findAll();
-        for (Account account : allAccounts) {
-            if (account.equals(accountDTO.toDTO())) {
-                throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
-            }
-        }
-    }
+
+//    private void setWithdraws(Long id) {
+//        String url = "http://localhost:8090/withdrawals/v1/" + id;
+//        RestTemplate restTemplate = new RestTemplate();
+//        restTemplate.postForLocation(url,id);
+//    }
 
 //    public List<Account> accountsPerClient(Long id) {
 //        Client client = clientRepository.findById(id).get();
