@@ -92,12 +92,9 @@ public class OperationsServices {
         accountOrigin.setBalanceAccount(accountOrigin.getBalanceAccount() - operation.getAmount());
         accountDestiny.setBalanceAccount(accountDestiny.getBalanceAccount() + operation.getAmount());
 
-
         accountRepository.save(accountOrigin);
         accountRepository.save(accountDestiny);
 
-        System.out.println(accountDestiny.getBalanceAccount());
-        System.out.println(accountOrigin.getBalanceAccount());
     }
 
     private void withdraw(Long id, Double amount) {
@@ -111,14 +108,11 @@ public class OperationsServices {
             account.setBalanceAccount((account.getBalanceAccount() - amount));
         }
         else {
-            if (account.getTypeAccount().getTax() + amount > account.getBalanceAccount()) {
+            if (account.getTypeAccount().calculateWithdraw(amount) > account.getBalanceAccount()) {
                 throw new InvalidOperationExceptions("O limite de saques gratuitos acabou e não tem saldo suficiente para fazer devido a taxa:  " + account.getTypeAccount().getTax());
             }
 
-            System.out.println(account.getBalanceAccount());
-            System.out.println(amount + account.getTypeAccount().getTax());
-
-            account.setBalanceAccount(account.getBalanceAccount() - (amount + account.getTypeAccount().getTax()));
+            account.setBalanceAccount(account.getBalanceAccount() - account.getTypeAccount().calculateWithdraw(amount));
         }
         accountRepository.save(account);
         updateWithdrawals(account.getId());

@@ -29,8 +29,8 @@ public class AccountControler {
         return ResponseEntity.ok().body(accountService.accountById(id));
     }
 
-    @GetMapping(value = "/balance/{id}")
-    public ResponseEntity<String> consultBalance(@PathVariable Long id) {
+    @GetMapping(value = "/balance/")
+    public ResponseEntity<Account> consultBalance(@RequestParam Long id) {
         return ResponseEntity.ok().body(accountService.consultBalance(id));
     }
 
