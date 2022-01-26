@@ -2,7 +2,6 @@ package com.desafio.manageraccount.services;
 
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Operations;
-import com.desafio.manageraccount.entities.enums.TypeAccount;
 import com.desafio.manageraccount.entities.enums.TypeOperations;
 import com.desafio.manageraccount.entities.enums.TypeStatus;
 import com.desafio.manageraccount.repositories.AccountRepository;
@@ -11,6 +10,7 @@ import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.BankingOperationsNotFound;
 import com.desafio.manageraccount.services.exceptions.InvalidOperationExceptions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,10 +25,12 @@ public class OperationsServices {
     @Autowired
     private AccountRepository accountRepository;
 
-    public OperationsServices(OperationsRepository operationsRepository) {
-        this.operationsRepository = operationsRepository;
-    }
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
+    public OperationsServices(OperationsRepository operationsRepository, KafkaTemplate<String, String> kafkaTemplate) {
+        this.operationsRepository = operationsRepository;
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     public List<Operations> operationsList() {
         List<Operations> operations = operationsRepository.findAll();
@@ -54,9 +56,9 @@ public class OperationsServices {
             return operationsRepository.save(newOperation);
         }
         if (newOperation.getTypeOperations() == TypeOperations.WITHDRAW) {
-                withdraw(id, newOperation.getAmount());
-                newOperation.setTypeStatus(TypeStatus.CONCLUDED);
-                return operationsRepository.save(newOperation);
+            withdraw(id, newOperation.getAmount());
+            newOperation.setTypeStatus(TypeStatus.CONCLUDED);
+            return operationsRepository.save(newOperation);
         }
         newOperation.setTypeStatus(TypeStatus.CANCELED);
         return operationsRepository.save(newOperation);
@@ -119,9 +121,7 @@ public class OperationsServices {
     }
 
     private void updateWithdrawals(Long id) {
-        String url = "http://localhost:8090/withdrawals/" + id;
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.put(url, id);
+        kafkaTemplate.send("newWithdraw", String.valueOf(id));
     }
 
     private Integer verifyWithdrawals(Long id) {

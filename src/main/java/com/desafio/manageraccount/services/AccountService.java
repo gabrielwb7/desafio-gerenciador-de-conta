@@ -9,6 +9,7 @@ import com.desafio.manageraccount.services.exceptions.AccountAlreadyRegisteredEx
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -17,11 +18,13 @@ import java.util.List;
 @Service
 public class AccountService {
 
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
-    public AccountService(AccountRepository accountRepository) {
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public AccountService(AccountRepository accountRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.accountRepository = accountRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public List<Account> listAllAccounts() {
@@ -49,7 +52,7 @@ public class AccountService {
         Account account = accountRepository.save(accountDTO.toDTO());
         account.setClient(client);
 
-        setWithdraws(account.getId());
+        setWithdraws(account);
 
         return accountRepository.save(account);
     }
@@ -88,10 +91,9 @@ public class AccountService {
         return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("A conta com o id " + id +" não existe"));
     }
 
-    private void setWithdraws(Long id) {
-        String url = "http://localhost:8090/withdrawals/v1/" + id;
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.postForLocation(url,id);
+    private void setWithdraws(Account account) {
+        String data = String.format("{\"id\":%d,\"limit\":\"%d\"}", account.getId(), account.getTypeAccount().getMaxLimitWithdrawals());
+        kafkaTemplate.send("newAccount", data);
     }
 
 //    public List<Account> accountsPerClient(Long id) {
