@@ -1,5 +1,6 @@
 package com.desafio.manageraccount.services;
 
+import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Operations;
 import com.desafio.manageraccount.entities.enums.TypeOperations;
@@ -12,7 +13,7 @@ import com.desafio.manageraccount.services.exceptions.InvalidOperationExceptions
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import redis.clients.jedis.Jedis;
 
 import java.util.List;
 
@@ -35,6 +36,11 @@ public class OperationsServices {
     public List<Operations> operationsList() {
         List<Operations> operations = operationsRepository.findAll();
         return operations;
+    }
+
+    public List<Operations> statement(Long id) {
+        List<Operations> operationsList = operationsRepository.findByAccountId(id);
+        return operationsList;
     }
 
     public Operations insertOperation(Operations operation, Long id) {
@@ -106,8 +112,9 @@ public class OperationsServices {
         if (amount > account.getBalanceAccount()) {
             throw new InvalidOperationExceptions("Não tem saldo suficiente para fazer o saque.");
         }
-        if (verifyWithdrawals(account.getId()) < account.getTypeAccount().getMaxLimitWithdrawals()) {
+        if (verifyWithdrawals(account.getId()) != 0) {
             account.setBalanceAccount((account.getBalanceAccount() - amount));
+            newWithdraw(account.getId());
         }
         else {
             if (account.getTypeAccount().calculateWithdraw(amount) > account.getBalanceAccount()) {
@@ -117,17 +124,15 @@ public class OperationsServices {
             account.setBalanceAccount(account.getBalanceAccount() - account.getTypeAccount().calculateWithdraw(amount));
         }
         accountRepository.save(account);
-        updateWithdrawals(account.getId());
     }
 
-    private void updateWithdrawals(Long id) {
+    private void newWithdraw(Long id) {
         kafkaTemplate.send("newWithdraw", String.valueOf(id));
     }
 
     private Integer verifyWithdrawals(Long id) {
-        String url = "http://localhost:8090/withdrawals/" + id;
-        RestTemplate restTemplate = new RestTemplate();
-        Integer withdraw = restTemplate.getForObject(url, Integer.class);
+        Jedis jedis = new Jedis();
+        int withdraw = Integer.parseInt(jedis.get(Long.toString(id)));
         return withdraw;
     }
 

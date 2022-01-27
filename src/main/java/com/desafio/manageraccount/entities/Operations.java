@@ -51,7 +51,7 @@ public class Operations {
     private TypeStatus typeStatus;
 
     @ManyToOne
-    @JoinColumn(name = "account_id")
+    @JoinColumn(name = "accountId")
     private Account account;
 
     @Override

@@ -1,5 +1,6 @@
 package com.desafio.manageraccount.controllers;
 
+import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Operations;
 import com.desafio.manageraccount.services.OperationsServices;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,11 @@ public class OperationsController {
     @GetMapping
     public ResponseEntity<List<Operations>> operationsList() {
         return ResponseEntity.ok().body(operationsServices.operationsList());
+    }
+
+    @GetMapping(value = "/statement/{id}")
+    public ResponseEntity<List<Operations>> operationsList(@PathVariable Long id) {
+        return ResponseEntity.ok().body(operationsServices.statement(id));
     }
 
     @GetMapping(value = "/{id}")
