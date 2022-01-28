@@ -2,6 +2,7 @@ package com.desafio.manageraccount.entities;
 
 import com.desafio.manageraccount.entities.enums.TypeOperations;
 import com.desafio.manageraccount.entities.enums.TypeStatus;
+import com.desafio.manageraccount.utils.Validate;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;

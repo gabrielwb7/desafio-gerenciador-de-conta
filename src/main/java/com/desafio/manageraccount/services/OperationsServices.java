@@ -1,6 +1,5 @@
 package com.desafio.manageraccount.services;
 
-import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Operations;
 import com.desafio.manageraccount.entities.enums.TypeOperations;
@@ -94,7 +93,6 @@ public class OperationsServices {
         }
 
         Long id = accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(operation.getAgencyDestiny(), operation.getAccountDestiny(), operation.getDestinyVerifyDigit()).getId();
-
         Account accountDestiny = accountRepository.getById(id);
 
         accountOrigin.setBalanceAccount(accountOrigin.getBalanceAccount() - operation.getAmount());

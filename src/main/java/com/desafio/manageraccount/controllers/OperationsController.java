@@ -18,23 +18,23 @@ public class OperationsController {
     @Autowired
     private OperationsServices operationsServices;
 
-    @GetMapping
+    @GetMapping(value = "/all")
     public ResponseEntity<List<Operations>> operationsList() {
         return ResponseEntity.ok().body(operationsServices.operationsList());
     }
 
-    @GetMapping(value = "/statement/{id}")
-    public ResponseEntity<List<Operations>> operationsList(@PathVariable Long id) {
+    @GetMapping(value = "/statement")
+    public ResponseEntity<List<Operations>> operationsList(@RequestParam Long id) {
         return ResponseEntity.ok().body(operationsServices.statement(id));
     }
 
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<Operations> operationById(@PathVariable Long id) {
+    @GetMapping
+    public ResponseEntity<Operations> operationById(@RequestParam Long id) {
         return ResponseEntity.ok().body(operationsServices.operationById(id));
     }
 
-    @PostMapping(value = "/{id}")
-    public ResponseEntity<Operations> insertOperation(@RequestBody Operations operation, @PathVariable Long id) {
+    @PostMapping
+    public ResponseEntity<Operations> insertOperation(@RequestBody Operations operation, @RequestParam Long id) {
        Operations newOperation = operationsServices.insertOperation(operation, id);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(newOperation.getIdOperation()).toUri();

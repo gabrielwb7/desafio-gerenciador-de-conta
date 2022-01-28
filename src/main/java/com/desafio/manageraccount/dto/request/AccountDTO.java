@@ -2,20 +2,19 @@ package com.desafio.manageraccount.dto.request;
 
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.enums.TypeAccount;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.desafio.manageraccount.utils.Validate;
+import lombok.*;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.validation.constraints.Null;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountDTO {
+public class AccountDTO extends Validate {
 
     @Enumerated(EnumType.STRING)
     private TypeAccount typeAccount;
@@ -27,5 +26,5 @@ public class AccountDTO {
         return new Account(agency, numberAccount, typeAccount, verifyDigit);
     }
 
-
 }
+

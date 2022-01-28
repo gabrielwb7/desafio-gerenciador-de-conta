@@ -5,13 +5,12 @@ import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.entities.enums.TypeAccount;
 import com.desafio.manageraccount.repositories.AccountRepository;
+import com.desafio.manageraccount.repositories.ClientRepository;
 import com.desafio.manageraccount.services.exceptions.AccountAlreadyRegisteredException;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -19,34 +18,34 @@ import java.util.List;
 public class AccountService {
 
     private final AccountRepository accountRepository;
-
+    private final ClientRepository clientRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public AccountService(AccountRepository accountRepository, KafkaTemplate<String, String> kafkaTemplate) {
+    public AccountService(AccountRepository accountRepository, ClientRepository clientRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.accountRepository = accountRepository;
+        this.clientRepository = clientRepository;
         this.kafkaTemplate = kafkaTemplate;
     }
 
     public List<Account> listAllAccounts() {
-        List<Account> allAccounts = accountRepository.findAll();
-        return allAccounts;
+        return accountRepository.findAll();
     }
 
     public Account insertAccount(AccountDTO accountDTO, Long id) {
+
+        accountDTO.validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
 
         if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
             throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
         }
 
-        String url = "http://localhost:8080/clients/" + id;
-        RestTemplate restTemplate = new RestTemplate();
-        Client client = restTemplate.getForObject(url, Client.class);
+        Client client = clientRepository.getById(id);
 
         if (accountDTO.getTypeAccount() == TypeAccount.REGULARPERSON && client.getClientCPF() == null) {
-            throw new DocumentationException("O cliente não tem CPF cadastrado para abrir conta juridica");
+            throw new DocumentationException("O cliente não tem CPF cadastrado para abrir conta normal");
         }
         if (accountDTO.getTypeAccount() == TypeAccount.LEGALPERSON && client.getClientCNPJ() == null) {
-            throw new DocumentationException("O cliente não tem CNPJ cadastrado para abrir conta normal");
+            throw new DocumentationException("O cliente não tem CNPJ cadastrado para abrir conta juridica");
         }
 
         Account account = accountRepository.save(accountDTO.toDTO());
@@ -64,10 +63,14 @@ public class AccountService {
 
     public Account updateAccount(Long id, AccountDTO accountDTO) {
         idIsExist(id);
+        accountDTO.validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
+
         if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
             throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
         }
+
         Account updateAccount = accountRepository.getById(id);
+
         updateAccount.setNumberAccount(accountDTO.getNumberAccount());
         updateAccount.setAgency(accountDTO.getAgency());
         updateAccount.setVerifyDigit(accountDTO.getVerifyDigit());
@@ -77,8 +80,7 @@ public class AccountService {
 
     public Account accountById(Long id) {
         idIsExist(id);
-        Account account = accountRepository.findById(id).get();
-        return account;
+        return accountRepository.findById(id).get();
     }
 
     public Account consultBalance(Long id) {

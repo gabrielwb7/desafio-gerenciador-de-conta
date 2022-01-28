@@ -19,13 +19,13 @@ public class ClientController {
     @Autowired
     private ClientService clientService;
 
-    @GetMapping
+    @GetMapping(value = "/all")
     public ResponseEntity<List<Client>> clientList() {
         return ResponseEntity.ok().body(clientService.listAllClients());
     }
 
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<Client> clientById(@PathVariable Long id) {
+    @GetMapping
+    public ResponseEntity<Client> clientById(@RequestParam Long id) {
         return ResponseEntity.ok().body(clientService.clientById(id));
     }
 
@@ -37,14 +37,14 @@ public class ClientController {
         return ResponseEntity.created(uri).body(client);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Client> updateClient (@PathVariable Long id, @RequestBody @Valid ClientDTO clientDTO) {
+    @PutMapping
+    public ResponseEntity<Client> updateClient (@RequestParam Long id, @RequestBody @Valid ClientDTO clientDTO) {
         return ResponseEntity.ok().body(clientService.updateClient(id, clientDTO));
     }
 
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
+    @DeleteMapping
+    public ResponseEntity<Void> deleteClient(@RequestParam Long id) {
         clientService.deleteClientById(id);
         return ResponseEntity.noContent().build();
     }

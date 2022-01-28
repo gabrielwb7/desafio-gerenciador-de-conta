@@ -5,7 +5,6 @@ import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.repositories.ClientRepository;
 import com.desafio.manageraccount.services.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.Objects;
 @Service
 public class ClientService {
 
-    @Autowired
     private final ClientRepository clientRepository;
 
     public ClientService(ClientRepository clientRepository) {
@@ -22,11 +20,12 @@ public class ClientService {
     }
 
     public List<Client> listAllClients() {
-        List<Client> allClients = clientRepository.findAll();
-        return allClients;
+        return clientRepository.findAll();
     }
 
     public Client insertClient(ClientDTO clientDTO) {
+
+        clientDTO.validatePhoneNumber(clientDTO.getPhoneNumber());
 
         if (clientDTO.getClientCPF() == null && clientDTO.getClientCNPJ() == null) {
             throw new DocumentationException("Você precisa informar um CPF ou CNPJ para efetuar o cadastro");
@@ -49,6 +48,7 @@ public class ClientService {
 
     public Client updateClient(Long id, ClientDTO clientDTO) {
         idIsExist(id);
+        clientDTO.validatePhoneNumber(clientDTO.getPhoneNumber());
 
         Client updateClient = clientRepository.getById(id);
         updateClient.setName(clientDTO.getName());
