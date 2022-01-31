@@ -12,9 +12,10 @@ public class AccountResponseDTO {
     private String numberAccount;
     private String verifyDigit;
     private Double balanceAccount;
+    private Integer quantityWithdraws;
 
     public static AccountResponseDTO toDTO (Account account) {
-        return new AccountResponseDTO(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit(), account.getBalanceAccount());
+        return new AccountResponseDTO(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit(), account.getBalanceAccount(), account.getQuantityWithdraw());
     }
 
 }

@@ -11,6 +11,7 @@ import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class AccountService {
 
         Account account = accountRepository.save(accountDTO.toDTO());
         account.setClient(client);
-
+        account.setQuantityWithdraw(account.getTypeAccount().getMaxLimitWithdrawals());
         setWithdraws(account);
 
         return accountRepository.save(account);
@@ -78,6 +79,17 @@ public class AccountService {
         return accountRepository.save(updateAccount);
     }
 
+    public Account consultWithdrawFree(Long id) {
+        Jedis jedis = new Jedis();
+
+        Account account = accountRepository.getById(id);
+        account.setQuantityWithdraw(Integer.valueOf(jedis.get(Long.toString(id))));
+
+        accountRepository.save(account);
+
+        return account;
+    }
+
     public Account accountById(Long id) {
         idIsExist(id);
         return accountRepository.findById(id).get();
@@ -103,6 +115,5 @@ public class AccountService {
 //        List<Account> allAccounts = new ArrayList<>(client.getAccountList());
 //        return allAccounts;
 //    }
-
 
 }

@@ -25,6 +25,11 @@ public class AccountControler {
         return ResponseEntity.ok().body(accountService.listAllAccounts());
     }
 
+    @GetMapping(value = "/withdraw")
+    public ResponseEntity<AccountResponseDTO> withdrawFree (@RequestParam Long id) {
+        return ResponseEntity.ok().body(AccountResponseDTO.toDTO(accountService.consultWithdrawFree(id)));
+    }
+
     @GetMapping
     public ResponseEntity<Account> accountById(@RequestParam Long id) {
         return ResponseEntity.ok().body(accountService.accountById(id));

@@ -9,11 +9,14 @@ import com.desafio.manageraccount.repositories.OperationsRepository;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.BankingOperationsNotFound;
 import com.desafio.manageraccount.services.exceptions.InvalidOperationExceptions;
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
+import java.lang.management.GarbageCollectorMXBean;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 @Service
@@ -26,6 +29,7 @@ public class OperationsServices {
     private AccountRepository accountRepository;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
     public OperationsServices(OperationsRepository operationsRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.operationsRepository = operationsRepository;
@@ -100,7 +104,6 @@ public class OperationsServices {
 
         accountRepository.save(accountOrigin);
         accountRepository.save(accountDestiny);
-
     }
 
     private void withdraw(Long id, Double amount) {
@@ -118,20 +121,20 @@ public class OperationsServices {
             if (account.getTypeAccount().calculateWithdraw(amount) > account.getBalanceAccount()) {
                 throw new InvalidOperationExceptions("O limite de saques gratuitos acabou e não tem saldo suficiente para fazer devido a taxa:  " + account.getTypeAccount().getTax());
             }
-
             account.setBalanceAccount(account.getBalanceAccount() - account.getTypeAccount().calculateWithdraw(amount));
         }
         accountRepository.save(account);
     }
 
     private void newWithdraw(Long id) {
-        kafkaTemplate.send("newWithdraw", String.valueOf(id));
+        Operations operations = operationsRepository.getById(id);
+        String data = String.format("{\"idAccount\":%d,\"amount\":\"%.2f\",\"date\":\"%s\"}", operations.getAccount().getId(), operations.getAmount(), sdf.format(operations.getDateOperation()));
+        kafkaTemplate.send("newWithdraw", data);
     }
 
     private Integer verifyWithdrawals(Long id) {
         Jedis jedis = new Jedis();
-        int withdraw = Integer.parseInt(jedis.get(Long.toString(id)));
-        return withdraw;
+        return Integer.parseInt(jedis.get(Long.toString(id)));
     }
 
     private Operations idIsExist(Long id) {

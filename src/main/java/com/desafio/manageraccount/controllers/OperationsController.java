@@ -1,6 +1,5 @@
 package com.desafio.manageraccount.controllers;
 
-import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Operations;
 import com.desafio.manageraccount.services.OperationsServices;
 import org.springframework.beans.factory.annotation.Autowired;

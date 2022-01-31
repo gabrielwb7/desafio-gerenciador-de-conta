@@ -39,6 +39,9 @@ public class Account {
     private TypeAccount typeAccount;
 
     @Column
+    private Integer quantityWithdraw;
+
+    @Column
     private Double balanceAccount = 0.0;
 
     @ManyToOne
