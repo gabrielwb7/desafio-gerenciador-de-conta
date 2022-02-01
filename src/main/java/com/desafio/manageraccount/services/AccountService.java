@@ -106,7 +106,7 @@ public class AccountService {
     }
 
     private void setWithdraws(Account account) {
-        String data = String.format("{\"id\":%d,\"limit\":\"%d\"}", account.getId(), account.getTypeAccount().getMaxLimitWithdrawals());
+        String data = String.format("{\"id\":%d,\"limitWithdraw\":\"%d\"}", account.getId(), account.getTypeAccount().getMaxLimitWithdrawals());
         kafkaTemplate.send("newAccount", data);
     }
 

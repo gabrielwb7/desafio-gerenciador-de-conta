@@ -2,7 +2,6 @@ package com.desafio.manageraccount.entities;
 
 import com.desafio.manageraccount.entities.enums.TypeOperations;
 import com.desafio.manageraccount.entities.enums.TypeStatus;
-import com.desafio.manageraccount.utils.Validate;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,14 +25,21 @@ public class Operations {
     private Long idOperation;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TypeOperations typeOperations;
+
+    @Column(nullable = false)
     private Date dateOperation = new Date();
 
     @Column(nullable = false)
     private Double amount;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private TypeOperations typeOperations;
+    @Column
+    private TypeStatus typeStatus = TypeStatus.CANCELED;
+
+    @Column
+    private Double tax;
 
     @Column
     @Size(min = 5, max = 5)
@@ -46,10 +52,6 @@ public class Operations {
     @Column
     @Size(min = 1, max = 1)
     private String destinyVerifyDigit;
-
-    @Enumerated(EnumType.STRING)
-    @Column
-    private TypeStatus typeStatus;
 
     @ManyToOne
     @JoinColumn(name = "accountId")

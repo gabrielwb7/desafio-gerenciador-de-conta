@@ -2,6 +2,7 @@ package com.desafio.manageraccount.services;
 
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Operations;
+import com.desafio.manageraccount.entities.Tax;
 import com.desafio.manageraccount.entities.enums.TypeOperations;
 import com.desafio.manageraccount.entities.enums.TypeStatus;
 import com.desafio.manageraccount.repositories.AccountRepository;
@@ -9,13 +10,11 @@ import com.desafio.manageraccount.repositories.OperationsRepository;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.BankingOperationsNotFound;
 import com.desafio.manageraccount.services.exceptions.InvalidOperationExceptions;
-import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
-import java.lang.management.GarbageCollectorMXBean;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -28,6 +27,7 @@ public class OperationsServices {
     @Autowired
     private AccountRepository accountRepository;
 
+    private final Tax tax = new Tax();
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
@@ -55,38 +55,34 @@ public class OperationsServices {
         newOperation.setAccount(accountRepository.getById(id));
 
         if (newOperation.getTypeOperations() == TypeOperations.DEPOSIT) {
-            deposit(id, newOperation.getAmount());
-            newOperation.setTypeStatus(TypeStatus.CONCLUDED);
-            return operationsRepository.save(newOperation);
+            return operationsRepository.save(deposit(id, newOperation));
         }
         if (newOperation.getTypeOperations() == TypeOperations.BANKTRANSFER){
-            banktransfer(id, newOperation);
-            newOperation.setTypeStatus(TypeStatus.CONCLUDED);
-            return operationsRepository.save(newOperation);
+            return operationsRepository.save(banktransfer(id, newOperation));
         }
         if (newOperation.getTypeOperations() == TypeOperations.WITHDRAW) {
-            withdraw(id, newOperation.getAmount());
-            newOperation.setTypeStatus(TypeStatus.CONCLUDED);
-            return operationsRepository.save(newOperation);
+            return operationsRepository.save(withdraw(id, newOperation));
         }
-        newOperation.setTypeStatus(TypeStatus.CANCELED);
         return operationsRepository.save(newOperation);
     }
 
     public Operations operationById(Long id) {
         idIsExist(id);
-        Operations operation = operationsRepository.findById(id).get();
-        return operation;
+        return operationsRepository.findById(id).get();
     }
 
-    private void deposit(Long id, Double amount) {
+    private Operations deposit(Long id, Operations operations) {
         Account updateAccount = accountRepository.getById(id);
-        updateAccount.setBalanceAccount(updateAccount.getBalanceAccount() + amount);
+        updateAccount.setBalanceAccount(updateAccount.getBalanceAccount() + operations.getAmount());
 
         accountRepository.save(updateAccount);
+
+        operations.setTypeStatus(TypeStatus.CONCLUDED);
+
+        return operations;
     }
 
-    private void banktransfer(Long idAccountOrigin, Operations operation) {
+    private Operations banktransfer(Long idAccountOrigin, Operations operation) {
         Account accountOrigin = accountRepository.getById(idAccountOrigin);
 
         if (operation.getAmount() > accountOrigin.getBalanceAccount()) {
@@ -104,26 +100,35 @@ public class OperationsServices {
 
         accountRepository.save(accountOrigin);
         accountRepository.save(accountDestiny);
+
+        operation.setTypeStatus(TypeStatus.CONCLUDED);
+
+        return operation;
     }
 
-    private void withdraw(Long id, Double amount) {
+    private Operations withdraw(Long id, Operations operations) {
 
         Account account = accountRepository.getById(id);
 
-        if (amount > account.getBalanceAccount()) {
+        if (operations.getAmount() > account.getBalanceAccount()) {
             throw new InvalidOperationExceptions("Não tem saldo suficiente para fazer o saque.");
         }
         if (verifyWithdrawals(account.getId()) != 0) {
-            account.setBalanceAccount((account.getBalanceAccount() - amount));
-            newWithdraw(account.getId());
+            account.setBalanceAccount((account.getBalanceAccount() - operations.getAmount()));
+            operations.setTypeStatus(TypeStatus.CONCLUDED);
+            newWithdraw(operations.getIdOperation());
         }
         else {
-            if (account.getTypeAccount().calculateWithdraw(amount) > account.getBalanceAccount()) {
-                throw new InvalidOperationExceptions("O limite de saques gratuitos acabou e não tem saldo suficiente para fazer devido a taxa:  " + account.getTypeAccount().getTax());
+            if (tax.calculateWithdrawWithTax(account, operations.getAmount()) > account.getBalanceAccount()) {
+                throw new InvalidOperationExceptions("O limite de saques gratuitos acabou e não tem saldo suficiente para fazer devido a taxa:  " +  tax.returnTax(account));
             }
-            account.setBalanceAccount(account.getBalanceAccount() - account.getTypeAccount().calculateWithdraw(amount));
+            account.setBalanceAccount(account.getBalanceAccount() - tax.calculateWithdrawWithTax(account, operations.getAmount()));
+            operations.setTypeStatus(TypeStatus.CONCLUDED);
+            operations.setTax(tax.returnTax(account));
         }
+
         accountRepository.save(account);
+        return operations;
     }
 
     private void newWithdraw(Long id) {
