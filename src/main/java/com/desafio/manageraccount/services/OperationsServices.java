@@ -42,8 +42,7 @@ public class OperationsServices {
     }
 
     public List<Operations> statement(Long id) {
-        List<Operations> operationsList = operationsRepository.findByAccountId(id);
-        return operationsList;
+       return allOperationsForAccount(id);
     }
 
     public Operations insertOperation(Operations operation, Long id) {
@@ -144,6 +143,17 @@ public class OperationsServices {
 
     private Operations idIsExist(Long id) {
         return operationsRepository.findById(id).orElseThrow(() -> new BankingOperationsNotFound(id));
+    }
+
+    private List<Operations> allOperationsForAccount(Long id) {
+        List<Operations> operationsList = operationsRepository.findByAccountId(id);
+        Account account = accountRepository.getById(id);
+
+        List<Operations> transferList = operationsRepository.findByAccountDestinyAndAgencyDestinyAndDestinyVerifyDigit(account.getNumberAccount(), account.getAgency(), account.getVerifyDigit());
+
+        operationsList.addAll(transferList);
+
+        return operationsList;
     }
 
 }

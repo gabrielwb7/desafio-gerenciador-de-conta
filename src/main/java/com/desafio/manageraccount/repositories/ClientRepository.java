@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
 
-    Client getClientByClientCPF (String clientCPF);
-    Client getClientByClientCNPJ (String clientCNPJ);
+    Client findByClientCPF (String clientCPF);
+    Client findByClientCNPJ (String clientCNPJ);
+
 }

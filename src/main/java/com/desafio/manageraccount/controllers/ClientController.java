@@ -24,9 +24,14 @@ public class ClientController {
         return ResponseEntity.ok().body(clientService.listAllClients());
     }
 
-    @GetMapping
-    public ResponseEntity<Client> clientById(@RequestParam Long id) {
-        return ResponseEntity.ok().body(clientService.clientById(id));
+    @GetMapping("/cpf")
+    public ResponseEntity<Client> clientByCNPJ(@RequestBody ClientDTO clientDTO) {
+        return ResponseEntity.ok().body(clientService.clientByCPF(clientDTO));
+    }
+
+    @GetMapping("/cnpj")
+    public ResponseEntity<Client> clientByCPF(@RequestBody ClientDTO clientDTO) {
+        return ResponseEntity.ok().body(clientService.clientByCNPJ(clientDTO));
     }
 
     @PostMapping

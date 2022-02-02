@@ -110,10 +110,4 @@ public class AccountService {
         kafkaTemplate.send("newAccount", data);
     }
 
-//    public List<Account> accountsPerClient(Long id) {
-//        Client client = clientRepository.findById(id).get();
-//        List<Account> allAccounts = new ArrayList<>(client.getAccountList());
-//        return allAccounts;
-//    }
-
 }

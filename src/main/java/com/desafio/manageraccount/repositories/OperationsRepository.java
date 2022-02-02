@@ -8,4 +8,5 @@ import java.util.List;
 public interface OperationsRepository extends JpaRepository<Operations, Long> {
 
     List<Operations> findByAccountId(Long accountId);
+    List<Operations> findByAccountDestinyAndAgencyDestinyAndDestinyVerifyDigit(String accountDestiny, String agencyDestiny, String destinyVerifyDigit);
 }
