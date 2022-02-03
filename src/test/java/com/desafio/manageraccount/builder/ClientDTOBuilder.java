@@ -6,6 +6,9 @@ import lombok.Builder;
 @Builder
 public class ClientDTOBuilder {
 
+
+    @Builder.Default
+    private Long id = 1L;
     @Builder.Default
     private String name = "Gabriel";
     @Builder.Default
@@ -15,9 +18,9 @@ public class ClientDTOBuilder {
     @Builder.Default
     private String clientCPF = "126.251.926-82";
     @Builder.Default
-    private String clienteCNPJ = "01.120.328/0001-04";
+    private String clientCNPJ = "01.120.328/0001-04";
 
     public ClientDTO toClientDTO () {
-        return new ClientDTO(name,phoneNumber,address,clientCPF,clienteCNPJ);
+        return new ClientDTO(id,name,phoneNumber,address,clientCPF,clientCNPJ);
     }
 }

@@ -43,10 +43,9 @@ public class ClientController {
     }
 
     @PutMapping
-    public ResponseEntity<Client> updateClient (@RequestParam Long id, @RequestBody @Valid ClientDTO clientDTO) {
-        return ResponseEntity.ok().body(clientService.updateClient(id, clientDTO));
+    public ResponseEntity<Client> updateClient (@RequestBody @Valid ClientDTO clientDTO) {
+        return ResponseEntity.ok().body(clientService.updateClient(clientDTO));
     }
-
 
     @DeleteMapping
     public ResponseEntity<Void> deleteClient(@RequestParam Long id) {

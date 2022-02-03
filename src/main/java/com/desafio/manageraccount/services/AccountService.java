@@ -34,7 +34,7 @@ public class AccountService {
 
     public Account insertAccount(AccountDTO accountDTO, Long id) {
 
-        accountDTO.validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
+        validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
 
         if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
             throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
@@ -64,7 +64,7 @@ public class AccountService {
 
     public Account updateAccount(Long id, AccountDTO accountDTO) {
         idIsExist(id);
-        accountDTO.validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
+        validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
 
         if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
             throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
@@ -103,6 +103,16 @@ public class AccountService {
 
     private Account idIsExist(Long id) {
         return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("A conta com o id " + id +" não existe"));
+    }
+
+    private void validatesDataAccount(String agency, String numberAccount, String verifyDigit) {
+        boolean validate = agency.matches("^\\d+$") && numberAccount.matches("^\\d+$") && verifyDigit.matches("^\\d+$");
+        if (!validate) {
+            throw new DocumentationException("Os dados informados da conta estão inválidos: "
+                    + "agency - " + agency
+                    + ", account - " + numberAccount
+                    + ", verify digit - " + verifyDigit);
+        }
     }
 
     private void setWithdraws(Account account) {

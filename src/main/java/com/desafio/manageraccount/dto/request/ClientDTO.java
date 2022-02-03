@@ -1,18 +1,17 @@
 package com.desafio.manageraccount.dto.request;
 
 import com.desafio.manageraccount.entities.Client;
-import com.desafio.manageraccount.utils.Validate;
 import lombok.*;
 import org.hibernate.validator.constraints.br.CNPJ;
 import org.hibernate.validator.constraints.br.CPF;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientDTO extends Validate {
+public class ClientDTO {
 
+    private Long id;
     private String name;
     private String phoneNumber;
     private String address;
