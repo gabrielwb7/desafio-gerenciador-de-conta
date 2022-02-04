@@ -120,7 +120,7 @@ public class OperationsServices {
     }
 
     private void newWithdraw(Operations operation) {
-        String data = String.format("{\"idAccount\":%d,\"amount\":\"%.2f\",\"date\":\"%s\"}", operation.getAccount().getId(), operation.getAmount(), operation.getDateOperation());
+        String data = String.format("{\"idAccount\":%d,\"amount\":\"%.2f\",\"date\":\"%s\",\"tax\":\"%.2f\"}", operation.getAccount().getId(), operation.getAmount(), operation.getDateOperation(), operation.getTax());
         kafkaTemplate.send("newWithdraw", data);
     }
 
