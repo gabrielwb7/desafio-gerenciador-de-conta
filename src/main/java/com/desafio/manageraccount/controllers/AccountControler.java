@@ -1,7 +1,9 @@
 package com.desafio.manageraccount.controllers;
 
 import com.desafio.manageraccount.dto.request.AccountDTO;
-import com.desafio.manageraccount.dto.response.AccountResponseDTO;
+import com.desafio.manageraccount.dto.response.responsesaccount.AccountResponseDTO;
+import com.desafio.manageraccount.dto.response.responsesaccount.BalanceResponse;
+import com.desafio.manageraccount.dto.response.responsesaccount.WithdrawalsFreeResponse;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,32 +27,32 @@ public class AccountControler {
         return ResponseEntity.ok().body(accountService.listAllAccounts());
     }
 
-    @GetMapping(value = "/withdraw")
-    public ResponseEntity<AccountResponseDTO> withdrawFree (@RequestParam Long id) {
-        return ResponseEntity.ok().body(AccountResponseDTO.toDTO(accountService.consultWithdrawFree(id)));
+    @GetMapping
+    public ResponseEntity<AccountResponseDTO> accountById(@RequestParam Long id) {
+        return ResponseEntity.ok().body(AccountResponseDTO.toDTO(accountService.accountById(id)));
     }
 
-    @GetMapping
-    public ResponseEntity<Account> accountById(@RequestParam Long id) {
-        return ResponseEntity.ok().body(accountService.accountById(id));
+    @GetMapping(value = "/withdraw")
+    public ResponseEntity<WithdrawalsFreeResponse> withdrawFree (@RequestParam Long id) {
+        return ResponseEntity.ok().body(WithdrawalsFreeResponse.consultWithdrawals(accountService.consultWithdrawFree(id)));
     }
 
     @GetMapping(value = "/balance/")
-    public ResponseEntity<AccountResponseDTO> consultBalance(@RequestParam Long id) {
-        return ResponseEntity.ok().body(AccountResponseDTO.toDTO(accountService.consultBalance(id)));
+    public ResponseEntity<BalanceResponse> consultBalance(@RequestParam Long id) {
+        return ResponseEntity.ok().body(BalanceResponse.balanceResponse(accountService.accountById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<Account> insertAccount(@RequestBody @Valid AccountDTO accountDTO, @RequestParam Long id) {
+    public ResponseEntity<AccountResponseDTO> insertAccount(@RequestBody @Valid AccountDTO accountDTO, @RequestParam Long id) {
         Account account = accountService.insertAccount(accountDTO, id);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(account.getId()).toUri();
-        return ResponseEntity.created(uri).body(account);
+        return ResponseEntity.created(uri).body(AccountResponseDTO.toDTO(account));
     }
 
     @PutMapping
-    public ResponseEntity<Account> updateAccount(@RequestParam Long id, @RequestBody @Valid AccountDTO accountDTO) {
-        return ResponseEntity.ok().body(accountService.updateAccount(id, accountDTO));
+    public ResponseEntity<AccountResponseDTO> updateAccount(@RequestParam Long id, @RequestBody @Valid AccountDTO accountDTO) {
+        return ResponseEntity.ok().body(AccountResponseDTO.toDTO(accountService.updateAccount(id, accountDTO)));
     }
 
     @DeleteMapping

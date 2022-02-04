@@ -9,8 +9,8 @@ public enum TypeAccount {
     REGULARPERSON(5, 10.0),
     GOVERNMENTPERSON(250, 20.0);
 
-    private Integer maxLimitWithdrawals;
-    private Double tax;
+    private final Integer maxLimitWithdrawals;
+    private final Double tax;
 
     TypeAccount(Integer maxLimitWithdrawals, Double tax) {
         this.maxLimitWithdrawals = maxLimitWithdrawals;

@@ -4,7 +4,6 @@ import com.desafio.manageraccount.utils.WithdrawWithTax;
 
 public class Tax implements WithdrawWithTax {
 
-
     @Override
     public Double returnTax(Account account) {
         return account.getTypeAccount().getTax();

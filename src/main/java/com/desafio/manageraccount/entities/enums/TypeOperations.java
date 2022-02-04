@@ -4,6 +4,6 @@ public enum TypeOperations {
 
     BANKTRANSFER,
     WITHDRAW,
-    DEPOSIT;
+    DEPOSIT
 
 }

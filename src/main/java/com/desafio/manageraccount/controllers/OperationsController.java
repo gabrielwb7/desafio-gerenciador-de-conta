@@ -1,5 +1,8 @@
 package com.desafio.manageraccount.controllers;
 
+import com.desafio.manageraccount.dto.response.responsesoperations.ResponseDeposit;
+import com.desafio.manageraccount.dto.response.responsesoperations.ResponseTransfer;
+import com.desafio.manageraccount.dto.response.responsesoperations.ResponseWithdraw;
 import com.desafio.manageraccount.entities.Operations;
 import com.desafio.manageraccount.services.OperationsServices;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +35,28 @@ public class OperationsController {
         return ResponseEntity.ok().body(operationsServices.operationById(id));
     }
 
-    @PostMapping
-    public ResponseEntity<Operations> insertOperation(@RequestBody Operations operation, @RequestParam Long id) {
-       Operations newOperation = operationsServices.insertOperation(operation, id);
+    @PostMapping("/withdraw")
+    public ResponseEntity<ResponseWithdraw> withdraw(@RequestBody Operations operation, @RequestParam Long id) {
+       Operations newOperation = operationsServices.withdraw(id, operation);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(newOperation.getIdOperation()).toUri();
-        return ResponseEntity.created(uri).body(newOperation);
+        return ResponseEntity.created(uri).body(ResponseWithdraw.responseWithdraw(newOperation));
+    }
+
+    @PostMapping("/deposit")
+    public ResponseEntity<ResponseDeposit> deposit(@RequestBody Operations operation, @RequestParam Long id) {
+       Operations newOperation = operationsServices.deposit(id, operation);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(newOperation.getIdOperation()).toUri();
+        return ResponseEntity.created(uri).body(ResponseDeposit.responseDeposit(newOperation));
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<ResponseTransfer> transfer(@RequestBody Operations operation, @RequestParam Long id) {
+       Operations newOperation = operationsServices.bankTransfer(id, operation);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(newOperation.getIdOperation()).toUri();
+        return ResponseEntity.created(uri).body(ResponseTransfer.responseTransfer(newOperation));
     }
 
 }

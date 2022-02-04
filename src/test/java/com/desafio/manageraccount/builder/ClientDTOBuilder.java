@@ -16,7 +16,7 @@ public class ClientDTOBuilder {
     @Builder.Default
     private String address = "Rua Brasil 555";
     @Builder.Default
-    private String clientCPF = "126.251.926-82";
+    private String clientCPF = "938.447.860-15";
     @Builder.Default
     private String clientCNPJ = "01.120.328/0001-04";
 

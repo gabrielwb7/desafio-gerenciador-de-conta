@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 @Entity
@@ -24,12 +25,12 @@ public class Operations {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idOperation;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
     private TypeOperations typeOperations;
 
     @Column(nullable = false)
-    private Date dateOperation = new Date();
+    private String dateOperation = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 
     @Column(nullable = false)
     private Double amount;
@@ -39,7 +40,7 @@ public class Operations {
     private TypeStatus typeStatus = TypeStatus.CANCELED;
 
     @Column
-    private Double tax;
+    private Double tax = 0.0;
 
     @Column
     @Size(min = 5, max = 5)

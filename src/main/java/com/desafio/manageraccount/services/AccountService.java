@@ -8,6 +8,7 @@ import com.desafio.manageraccount.repositories.AccountRepository;
 import com.desafio.manageraccount.repositories.ClientRepository;
 import com.desafio.manageraccount.services.exceptions.AccountAlreadyRegisteredException;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
+import com.desafio.manageraccount.services.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -34,14 +35,12 @@ public class AccountService {
 
     public Account insertAccount(AccountDTO accountDTO, Long id) {
 
+        Client client = clientIsExist(id);
         validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
 
         if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
             throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
         }
-
-        Client client = clientRepository.getById(id);
-
         if (accountDTO.getTypeAccount() == TypeAccount.REGULARPERSON && client.getClientCPF() == null) {
             throw new DocumentationException("O cliente não tem CPF cadastrado para abrir conta normal");
         }
@@ -63,14 +62,12 @@ public class AccountService {
     }
 
     public Account updateAccount(Long id, AccountDTO accountDTO) {
-        idIsExist(id);
+        Account updateAccount = idIsExist(id);
         validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
 
         if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
             throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
         }
-
-        Account updateAccount = accountRepository.getById(id);
 
         updateAccount.setNumberAccount(accountDTO.getNumberAccount());
         updateAccount.setAgency(accountDTO.getAgency());
@@ -80,9 +77,10 @@ public class AccountService {
     }
 
     public Account consultWithdrawFree(Long id) {
-        Jedis jedis = new Jedis();
 
-        Account account = accountRepository.getById(id);
+        Jedis jedis = new Jedis();
+        Account account = idIsExist(id);
+
         account.setQuantityWithdraw(Integer.valueOf(jedis.get(Long.toString(id))));
 
         accountRepository.save(account);
@@ -91,18 +89,15 @@ public class AccountService {
     }
 
     public Account accountById(Long id) {
-        idIsExist(id);
-        return accountRepository.findById(id).get();
-    }
-
-    public Account consultBalance(Long id) {
-        idIsExist(id);
-        Account account = accountRepository.findById(id).get();
-        return account;
+        return idIsExist(id);
     }
 
     private Account idIsExist(Long id) {
         return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("A conta com o id " + id +" não existe"));
+    }
+
+    private Client clientIsExist(Long id) {
+        return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(("O cliente com o id " + id + " não foi encontrado")));
     }
 
     private void validatesDataAccount(String agency, String numberAccount, String verifyDigit) {

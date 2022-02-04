@@ -150,7 +150,7 @@ public class ClientServicesTest {
     void whenUpdateClientWithSuccess() {
         ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
-        ClientDTO newData = new ClientDTO(clientDTO.getId(),"Gabriel","22999995555","rua teste","126.251.926-82",  "01.120.328/0001-04");
+        ClientDTO newData = new ClientDTO(clientDTO.getId(),"Gabriel","22999995555","rua teste","938.447.860-15",  "01.120.328/0001-04");
 
         when(clientRepository.findByClientCPFAndClientCNPJ(clientDTO.getClientCPF(), clientDTO.getClientCNPJ())).thenReturn(expectedClient);
         when(clientRepository.save(expectedClient)).thenReturn(expectedClient);
@@ -177,7 +177,7 @@ public class ClientServicesTest {
     void whenPhoneNumberForUpdateIsInvalid() {
         ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
-        ClientDTO invalidClient = new ClientDTO(clientDTO.getId(), "Gabriel",INVALID_PHONE_NUMBER,"teste","126.251.926-82",  "01.120.328/0001-04");
+        ClientDTO invalidClient = new ClientDTO(clientDTO.getId(), "Gabriel",INVALID_PHONE_NUMBER,"teste","938.447.860-15",  "01.120.328/0001-04");
 
         when(clientRepository.findByClientCPFAndClientCNPJ(clientDTO.getClientCPF(), clientDTO.getClientCNPJ())).thenReturn(expectedClient);
         when(clientRepository.save(expectedClient)).thenReturn(expectedClient);

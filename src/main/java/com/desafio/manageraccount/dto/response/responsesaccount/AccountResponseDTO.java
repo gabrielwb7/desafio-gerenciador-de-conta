@@ -1,4 +1,4 @@
-package com.desafio.manageraccount.dto.response;
+package com.desafio.manageraccount.dto.response.responsesaccount;
 
 import com.desafio.manageraccount.entities.Account;
 import lombok.AllArgsConstructor;
@@ -11,11 +11,9 @@ public class AccountResponseDTO {
     private String agency;
     private String numberAccount;
     private String verifyDigit;
-    private Double balanceAccount;
-    private Integer quantityWithdraws;
 
     public static AccountResponseDTO toDTO (Account account) {
-        return new AccountResponseDTO(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit(), account.getBalanceAccount(), account.getQuantityWithdraw());
+        return new AccountResponseDTO(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit());
     }
 
 }
