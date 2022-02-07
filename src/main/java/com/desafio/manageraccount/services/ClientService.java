@@ -43,6 +43,7 @@ public class ClientService {
     public Client insertClient(ClientDTO clientDTO) {
 
         validateData(clientDTO);
+        validatePhoneNumber(clientDTO);
 
         if (!Objects.isNull(clientRepository.findByClientCPF(clientDTO.getClientCPF()))) {
             throw new DocumentationException("O CPF já está cadastrado.");
@@ -53,11 +54,10 @@ public class ClientService {
         return  clientRepository.save(clientDTO.toDTO());
     }
 
-    public Client updateClient(ClientDTO clientDTO) {
-        verifyClientIsExist(clientDTO);
-        validateData(clientDTO);
+    public Client updateClient(Long id, ClientDTO clientDTO) {
 
-        Client updateClient = clientRepository.findByClientCPFAndClientCNPJ(clientDTO.getClientCPF(), clientDTO.getClientCNPJ());
+        Client updateClient = idIsExist(id);
+        validatePhoneNumber(clientDTO);
 
         updateClient.setName(clientDTO.getName());
         updateClient.setAddress(clientDTO.getAddress());
@@ -71,22 +71,19 @@ public class ClientService {
         clientRepository.deleteById(id);
     }
 
-    private void validateData(ClientDTO clientDTO) {
+    private void validatePhoneNumber(ClientDTO clientDTO) {
         if (!clientDTO.getPhoneNumber().matches("^\\d+$")) {
             throw new DocumentationException("O telefone informado é inválido: " + clientDTO.getPhoneNumber());
         }
+    }
+
+    private void validateData(ClientDTO clientDTO) {
         if (clientDTO.getClientCPF() == null && clientDTO.getClientCNPJ() == null) {
             throw new DocumentationException("Erro: não foi informado um documento.");
         }
     }
 
-    private void verifyClientIsExist(ClientDTO clientDTO) {
-        if(Objects.isNull(clientRepository.findByClientCPFAndClientCNPJ(clientDTO.getClientCPF(), clientDTO.getClientCNPJ()))) {
-            throw new ClientNotFoundException("Não foi encontrado o cliente com os documentos: " + clientDTO.getClientCPF() + ", " +clientDTO.getClientCNPJ());
-        }
-    }
-
-    private void idIsExist(Long id) {
-        clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(String.format("O cliente com esse id %d não foi encontrado", id)));
+    private Client idIsExist(Long id) {
+        return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(String.format("O cliente com esse id %d não foi encontrado", id)));
     }
 }

@@ -152,10 +152,10 @@ public class ClientServicesTest {
         Client expectedClient = clientDTO.toDTO();
         ClientDTO newData = new ClientDTO(clientDTO.getId(),"Gabriel","22999995555","rua teste","938.447.860-15",  "01.120.328/0001-04");
 
-        when(clientRepository.findByClientCPFAndClientCNPJ(clientDTO.getClientCPF(), clientDTO.getClientCNPJ())).thenReturn(expectedClient);
+        when(clientRepository.findById(expectedClient.getId())).thenReturn(Optional.of(expectedClient));
         when(clientRepository.save(expectedClient)).thenReturn(expectedClient);
 
-        Client actualClient = clientService.updateClient(newData);
+        Client actualClient = clientService.updateClient(expectedClient.getId(),newData);
         assertEquals(actualClient.getName(),newData.getName());
         assertEquals(actualClient.getClientCPF(),newData.getClientCPF());
         assertEquals(actualClient.getClientCNPJ(),newData.getClientCNPJ());
@@ -167,10 +167,11 @@ public class ClientServicesTest {
     @Test
     void whenDocumentationClientNotFoundForUpdate() {
         ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
+        Client expectedClient = clientDTO.toDTO();
 
-        when(clientRepository.findByClientCPFAndClientCNPJ(clientDTO.getClientCPF(), clientDTO.getClientCNPJ())).thenReturn(null);
+        when(clientRepository.save(expectedClient)).thenReturn(expectedClient);
 
-        assertThrows(ClientNotFoundException.class, () -> clientService.updateClient(clientDTO));
+        assertThrows(ClientNotFoundException.class, () -> clientService.updateClient(clientDTO.getId(), clientDTO));
     }
 
     @Test
@@ -179,10 +180,10 @@ public class ClientServicesTest {
         Client expectedClient = clientDTO.toDTO();
         ClientDTO invalidClient = new ClientDTO(clientDTO.getId(), "Gabriel",INVALID_PHONE_NUMBER,"teste","938.447.860-15",  "01.120.328/0001-04");
 
-        when(clientRepository.findByClientCPFAndClientCNPJ(clientDTO.getClientCPF(), clientDTO.getClientCNPJ())).thenReturn(expectedClient);
+        when(clientRepository.findById(expectedClient.getId())).thenReturn(Optional.of(expectedClient));
         when(clientRepository.save(expectedClient)).thenReturn(expectedClient);
 
-        assertThrows(DocumentationException.class, () -> clientService.updateClient(invalidClient));
+        assertThrows(DocumentationException.class, () -> clientService.updateClient(expectedClient.getId(),invalidClient));
     }
 
     @Test

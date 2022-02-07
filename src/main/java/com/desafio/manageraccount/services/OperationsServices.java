@@ -54,6 +54,7 @@ public class OperationsServices {
 
         accountRepository.save(updateAccount);
 
+        operation.setAccount(updateAccount);
         operation.setTypeStatus(TypeStatus.CONCLUDED);
         operation.setTypeOperations(TypeOperations.DEPOSIT);
 
@@ -83,6 +84,7 @@ public class OperationsServices {
         accountRepository.save(accountOrigin);
         accountRepository.save(accountDestiny);
 
+        operation.setAccount(accountOrigin);
         operation.setTypeStatus(TypeStatus.CONCLUDED);
         operation.setTypeOperations(TypeOperations.BANKTRANSFER);
 
