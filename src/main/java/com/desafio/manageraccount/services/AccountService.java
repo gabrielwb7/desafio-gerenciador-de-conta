@@ -6,7 +6,6 @@ import com.desafio.manageraccount.entities.Client;
 import com.desafio.manageraccount.entities.enums.TypeAccount;
 import com.desafio.manageraccount.repositories.AccountRepository;
 import com.desafio.manageraccount.repositories.ClientRepository;
-import com.desafio.manageraccount.services.exceptions.AccountAlreadyRegisteredException;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.ClientNotFoundException;
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class AccountService {
@@ -36,11 +36,7 @@ public class AccountService {
     public Account insertAccount(AccountDTO accountDTO, Long id) {
 
         Client client = clientIsExist(id);
-        validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
 
-        if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
-            throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
-        }
         if (accountDTO.getTypeAccount() == TypeAccount.REGULARPERSON && client.getClientCPF() == null) {
             throw new DocumentationException("O cliente não tem CPF cadastrado para abrir conta normal");
         }
@@ -48,12 +44,12 @@ public class AccountService {
             throw new DocumentationException("O cliente não tem CNPJ cadastrado para abrir conta juridica");
         }
 
-        Account account = accountRepository.save(accountDTO.toDTO());
-        account.setClient(client);
-        account.setQuantityWithdraw(account.getTypeAccount().getMaxLimitWithdrawals());
-        setWithdraws(account);
+        Account createAccount = accountRepository.save(validatesDataAccount(accountDTO));
+        createAccount.setClient(client);
+        createAccount.setQuantityWithdraw(createAccount.getTypeAccount().getMaxLimitWithdrawals());
+        setWithdraws(createAccount);
 
-        return accountRepository.save(account);
+        return accountRepository.save(createAccount);
     }
 
     public void delete(Long id) {
@@ -62,18 +58,14 @@ public class AccountService {
     }
 
     public Account updateAccount(Long id, AccountDTO accountDTO) {
-        Account updateAccount = idIsExist(id);
-        validatesDataAccount(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit());
+        Account beforeAccount = idIsExist(id);
+        Account updateAccount = validatesDataAccount(accountDTO);
 
-        if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(accountDTO.getAgency(), accountDTO.getNumberAccount(), accountDTO.getVerifyDigit()) != null) {
-            throw new AccountAlreadyRegisteredException("Dados incorretos! Os dados informados já estão cadastrados");
-        }
+        beforeAccount.setNumberAccount(updateAccount.getNumberAccount());
+        beforeAccount.setAgency(updateAccount.getAgency());
+        beforeAccount.setVerifyDigit(updateAccount.getVerifyDigit());
 
-        updateAccount.setNumberAccount(accountDTO.getNumberAccount());
-        updateAccount.setAgency(accountDTO.getAgency());
-        updateAccount.setVerifyDigit(accountDTO.getVerifyDigit());
-
-        return accountRepository.save(updateAccount);
+        return accountRepository.save(beforeAccount);
     }
 
     public Account consultWithdrawFree(Long id) {
@@ -100,14 +92,24 @@ public class AccountService {
         return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(("O cliente com o id " + id + " não foi encontrado")));
     }
 
-    private void validatesDataAccount(String agency, String numberAccount, String verifyDigit) {
-        boolean validate = agency.matches("^\\d+$") && numberAccount.matches("^\\d+$") && verifyDigit.matches("^\\d+$");
+    private Account validatesDataAccount(AccountDTO accountDTO) {
+        Random random = new Random();
+        Account account = accountDTO.toDTO();
+
+        boolean validate = account.getAgency().matches("^\\d+$");
         if (!validate) {
-            throw new DocumentationException("Os dados informados da conta estão inválidos: "
-                    + "agency - " + agency
-                    + ", account - " + numberAccount
-                    + ", verify digit - " + verifyDigit);
+            throw new DocumentationException("O número da agência está incorreto: "
+                    + "agency - " + accountDTO.getAgency());
         }
+
+        account.setNumberAccount(random.nextInt(99999));
+        account.setVerifyDigit(random.nextInt(9));
+
+        while(accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit()) != null) {
+            account.setNumberAccount(random.nextInt(99999));
+            account.setVerifyDigit(random.nextInt(9));
+        }
+        return account;
     }
 
     private void setWithdraws(Account account) {

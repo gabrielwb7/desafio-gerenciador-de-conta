@@ -9,6 +9,7 @@ import com.desafio.manageraccount.repositories.AccountRepository;
 import com.desafio.manageraccount.repositories.OperationsRepository;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.BankingOperationsNotFound;
+import com.desafio.manageraccount.services.exceptions.DocumentationException;
 import com.desafio.manageraccount.services.exceptions.InvalidOperationExceptions;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -62,20 +63,22 @@ public class OperationsServices {
     }
 
     public Operations bankTransfer(Long idAccountOrigin, Operations operation) {
+        Account accountOrigin = accountIsExist(idAccountOrigin);
+
         if (operation.getAmount() <= 0) {
             throw new InvalidOperationExceptions("Valor da operação inválida");
         }
 
-        Account accountOrigin = accountIsExist(idAccountOrigin);
+        validatesDataAccount(operation.getAgencyDestiny(), operation.getAccountDestiny(), operation.getDestinyVerifyDigit());
 
         if (operation.getAmount() > accountOrigin.getBalanceAccount()) {
             throw new InvalidOperationExceptions("Saldo insuficiente!");
         }
-        if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(operation.getAgencyDestiny(), operation.getAccountDestiny(), operation.getDestinyVerifyDigit()) == null) {
+        if (accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(operation.getAgencyDestiny(), Integer.parseInt(operation.getAccountDestiny()), Integer.parseInt(operation.getDestinyVerifyDigit())) == null) {
             throw new AccountNotFoundException("A conta destino não existe");
         }
 
-        Long id = accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(operation.getAgencyDestiny(), operation.getAccountDestiny(), operation.getDestinyVerifyDigit()).getId();
+        Long id = accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(operation.getAgencyDestiny(), Integer.parseInt(operation.getAccountDestiny()), Integer.parseInt(operation.getDestinyVerifyDigit())).getId();
         Account accountDestiny = accountIsExist(id);
 
         accountOrigin.setBalanceAccount(accountOrigin.getBalanceAccount() - operation.getAmount());
@@ -143,11 +146,21 @@ public class OperationsServices {
         List<Operations> operationsList = operationsRepository.findByAccountId(id);
         Account account = accountRepository.getById(id);
 
-        List<Operations> transferList = operationsRepository.findByAccountDestinyAndAgencyDestinyAndDestinyVerifyDigit(account.getNumberAccount(), account.getAgency(), account.getVerifyDigit());
+        List<Operations> transferList = operationsRepository.findByAccountDestinyAndAgencyDestinyAndDestinyVerifyDigit(Integer.toString(account.getNumberAccount()), account.getAgency(), Integer.toString(account.getVerifyDigit()));
 
         operationsList.addAll(transferList);
 
         return operationsList;
+    }
+
+    private void validatesDataAccount(String agency, String numberAccount, String verifyDigit) {
+        boolean validate = agency.matches("^\\d+$") && numberAccount.matches("^\\d+$") && verifyDigit.matches("^\\d+$");
+        if (!validate) {
+            throw new DocumentationException("Os dados informados da conta destino estão inválidos: "
+                    + "agency - " + agency
+                    + ", account - " + numberAccount
+                    + ", verify digit - " + verifyDigit);
+        }
     }
 
 }

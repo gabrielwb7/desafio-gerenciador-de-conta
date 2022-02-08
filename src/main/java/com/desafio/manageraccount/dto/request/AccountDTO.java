@@ -16,11 +16,9 @@ public class AccountDTO {
     @Enumerated(EnumType.STRING)
     private TypeAccount typeAccount;
     private String agency;
-    private String numberAccount;
-    private String verifyDigit;
 
     public Account toDTO () {
-        return new Account(agency, numberAccount, typeAccount, verifyDigit);
+        return new Account(agency, typeAccount);
     }
 
 }

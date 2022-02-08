@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    Account findByAgencyAndNumberAccountAndVerifyDigit(String agency, String numberAccount, String verifyDigit);
+    Account findByAgencyAndNumberAccountAndVerifyDigit(String agency, Integer numberAccount, Integer verifyDigit);
 }

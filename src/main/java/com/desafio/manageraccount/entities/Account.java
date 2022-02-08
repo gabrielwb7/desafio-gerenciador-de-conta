@@ -27,12 +27,10 @@ public class Account {
     private String agency;
 
     @Column(nullable = false)
-    @Size(min = 5, max = 5)
-    private String numberAccount;
+    private Integer numberAccount;
 
     @Column(nullable = false)
-    @Size(min = 1, max = 1)
-    private String verifyDigit;
+    private Integer verifyDigit;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -52,11 +50,9 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private List<Operations> operationsList = new ArrayList<>();
 
-    public Account(String agency, String numberAccount, TypeAccount typeAccount, String verifyDigit) {
+    public Account(String agency,TypeAccount typeAccount) {
         this.agency = agency;
-        this.numberAccount = numberAccount;
         this.typeAccount = typeAccount;
-        this.verifyDigit = verifyDigit;
     }
 
     @Override
