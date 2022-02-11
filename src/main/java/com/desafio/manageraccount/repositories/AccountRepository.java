@@ -2,10 +2,15 @@ package com.desafio.manageraccount.repositories;
 
 import com.desafio.manageraccount.entities.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    Account findByAgencyAndNumberAccountAndVerifyDigit(String agency, Integer numberAccount, Integer verifyDigit);
+    Account findByAgencyAndNumberAccountAndVerifyDigit(String agency, String numberAccount, String verifyDigit);
+
+    @Query("SELECT COALESCE(MAX(ID), 0) + 1 AS NEXTID FROM accounts")
+    Long nextID();
+
 }

@@ -31,6 +31,7 @@ public class ClientServicesTest {
 
     private static final long INVALID_CLIENT_ID = 1L;
     private static final String INVALID_PHONE_NUMBER = "33a55554444";
+    private static final ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
 
     @Mock
     private ClientRepository clientRepository;
@@ -50,7 +51,6 @@ public class ClientServicesTest {
 
     @Test
     void whenListClientsIsCalledThenReturnListOfClients() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
 
         when(clientRepository.findAll()).thenReturn(Collections.singletonList(expectedClient));
@@ -63,7 +63,6 @@ public class ClientServicesTest {
 
     @Test
     void whenFoundClientByCPF() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
 
         when(clientRepository.findByClientCPF(clientDTO.getClientCPF())).thenReturn(expectedClient);
@@ -73,7 +72,6 @@ public class ClientServicesTest {
 
     @Test
     void whenNotFoundClientByCPFInformed() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         when(clientRepository.findByClientCPF(clientDTO.getClientCPF())).thenReturn(null);
 
         assertThrows(ClientNotFoundException.class, () -> clientService.clientByCPF(clientDTO));
@@ -81,7 +79,6 @@ public class ClientServicesTest {
 
     @Test
     void whenFoundClientByCNPJ() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
 
         when(clientRepository.findByClientCNPJ(clientDTO.getClientCNPJ())).thenReturn(expectedClient);
@@ -91,7 +88,6 @@ public class ClientServicesTest {
 
     @Test
     void whenNotFoundClientByCNPJInformed() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         when(clientRepository.findByClientCPF(clientDTO.getClientCNPJ())).thenReturn(null);
 
         assertThrows(ClientNotFoundException.class, () -> clientService.clientByCNPJ(clientDTO));
@@ -99,7 +95,6 @@ public class ClientServicesTest {
 
     @Test
     void whenClientInformedThenItShouldBeCreated() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
 
         when(clientRepository.findByClientCPF(clientDTO.getClientCPF())).thenReturn(null);
@@ -117,45 +112,51 @@ public class ClientServicesTest {
 
     @Test
     void whenPhoneNumberInformedIsInvalid() {
-        ClientDTO clientDTO = new ClientDTO(1L,"Gabriel",INVALID_PHONE_NUMBER,"teste","126.251.926-82",  "59.144.503/0001-83");
-        Client expectedClient = clientDTO.toDTO();
+        ClientDTO clientTempDTO = new ClientDTO("Gabriel",INVALID_PHONE_NUMBER,"teste","126.251.926-82",  "59.144.503/0001-83");
+        Client expectedClient = clientTempDTO.toDTO();
 
         when(clientRepository.save(expectedClient)).thenReturn(null);
 
-        assertThrows(DocumentationException.class, () -> clientService.insertClient(clientDTO));
+        assertThrows(DocumentationException.class, () -> clientService.insertClient(clientTempDTO));
     }
 
     @Test
     void whenNoInformedTheDocumentation() {
-        ClientDTO clientDTO = new ClientDTO(1L,"Gabriel","33999995555","teste",null, null);
-        Client expectedClient = clientDTO.toDTO();
+        ClientDTO clientTempDTO = new ClientDTO("Gabriel","33999995555","teste",null, null);
+        Client expectedClient = clientTempDTO.toDTO();
 
         when(clientRepository.save(expectedClient)).thenReturn(null);
+
+        assertThrows(DocumentationException.class, () -> clientService.insertClient(clientTempDTO));
+    }
+
+    @Test
+    void whenAlreadyRegisteredCPFInformed() {
+        Client expectedClient = clientDTO.toDTO();
+
+        when(clientRepository.findByClientCPF(clientDTO.getClientCPF())).thenReturn(expectedClient);
 
         assertThrows(DocumentationException.class, () -> clientService.insertClient(clientDTO));
     }
 
     @Test
-    void whenAlreadyRegisteredDocumentationInformed() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
+    void whenAlreadyRegisteredCNPJInformed() {
         Client expectedClient = clientDTO.toDTO();
 
-        when(clientRepository.findByClientCPF(clientDTO.getClientCPF())).thenReturn(expectedClient);
         when(clientRepository.findByClientCNPJ(clientDTO.getClientCNPJ())).thenReturn(expectedClient);
 
         assertThrows(DocumentationException.class, () -> clientService.insertClient(clientDTO));
     }
-    
+
     @Test
     void whenUpdateClientWithSuccess() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
-        ClientDTO newData = new ClientDTO(clientDTO.getId(),"Gabriel","22999995555","rua teste","938.447.860-15",  "01.120.328/0001-04");
+        ClientDTO newData = new ClientDTO("Gabriel","22999995555","rua teste","938.447.860-15",  "01.120.328/0001-04");
 
-        when(clientRepository.findById(expectedClient.getId())).thenReturn(Optional.of(expectedClient));
+        when(clientRepository.findByClientCPF(expectedClient.getClientCPF())).thenReturn(expectedClient);
         when(clientRepository.save(expectedClient)).thenReturn(expectedClient);
 
-        Client actualClient = clientService.updateClient(expectedClient.getId(),newData);
+        Client actualClient = clientService.updateClient(newData);
         assertEquals(actualClient.getName(),newData.getName());
         assertEquals(actualClient.getClientCPF(),newData.getClientCPF());
         assertEquals(actualClient.getClientCNPJ(),newData.getClientCNPJ());
@@ -163,41 +164,96 @@ public class ClientServicesTest {
         assertEquals(actualClient.getAddress(),newData.getAddress());
     }
 
+    @Test
+    void whenUpdateClientWithCNPJ() {
+        ClientDTO clientTemp = new ClientDTO("Randel", "33444445555", "Rua Almeida 55", "938.447.860-15", null);
+        Client client = clientTemp.toDTO();
+
+        when(clientRepository.findByClientCPF(client.getClientCPF())).thenReturn(client);
+        when(clientRepository.save(client)).thenReturn(client);
+
+        Client actualClient = clientService.updateClient(clientDTO);
+
+        assertEquals(actualClient.getName(),clientDTO.getName());
+        assertEquals(actualClient.getClientCPF(),clientDTO.getClientCPF());
+        assertEquals(actualClient.getClientCNPJ(),clientDTO.getClientCNPJ());
+        assertEquals(actualClient.getPhoneNumber(),clientDTO.getPhoneNumber());
+        assertEquals(actualClient.getAddress(),clientDTO.getAddress());
+
+    }
+
+    @Test
+    void whenUpdateClientWithOnlyCNPJValid() {
+        ClientDTO clientTemp = new ClientDTO("Randel", "33444445555", "Rua Almeida 55", null, "01.120.328/0001-04");
+        Client client = clientTemp.toDTO();
+
+        ClientDTO clientTempDTO = new ClientDTO("Gabriel", "11222223333","teste", null , "01.120.328/0001-04");
+
+        when(clientRepository.findByClientCNPJ(client.getClientCNPJ())).thenReturn(client);
+        when(clientRepository.save(client)).thenReturn(client);
+
+        Client actualClient = clientService.updateClient(clientTempDTO);
+
+        assertEquals(actualClient.getName(),clientTempDTO.getName());
+        assertEquals(actualClient.getClientCPF(),clientTempDTO.getClientCPF());
+        assertEquals(actualClient.getClientCNPJ(),clientTempDTO.getClientCNPJ());
+        assertEquals(actualClient.getPhoneNumber(),clientTempDTO.getPhoneNumber());
+        assertEquals(actualClient.getAddress(),clientTempDTO.getAddress());
+
+    }
+
+    @Test
+    void whenUpdateClientWithOnlyCNPJIsNotExist() {
+        ClientDTO clientTemp = new ClientDTO("Randel", "33444445555", "Rua Almeida 55", null, "01.120.328/0001-04");
+
+        when(clientRepository.findByClientCNPJ(clientTemp.getClientCNPJ())).thenReturn(null);
+
+        assertThrows(ClientNotFoundException.class, () -> clientService.updateClient(clientTemp));
+    }
+
+    @Test
+    void whenTheClientInformedACNPJAlreadyRegistered () {
+        Client otherClient = new Client("Randel", "085.385.470-03", "01.120.328/0001-04", "33444445555", "Rua Almeida 55");
+        Client client = new Client("Tolkien", "938.447.860-15", null, "22888884444", "Rua Modor 111");
+
+        when(clientRepository.findByClientCPF(client.getClientCPF())).thenReturn(client);
+        when(clientRepository.save(client)).thenReturn(client);
+        when(clientRepository.findByClientCNPJ(otherClient.getClientCNPJ())).thenReturn(otherClient);
+        when(clientRepository.save(otherClient)).thenReturn(otherClient);
+
+        assertThrows(DocumentationException.class, () -> clientService.updateClient(clientDTO));
+    }
 
     @Test
     void whenDocumentationClientNotFoundForUpdate() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
-        Client expectedClient = clientDTO.toDTO();
 
-        when(clientRepository.save(expectedClient)).thenReturn(expectedClient);
+        when(clientRepository.findByClientCPF(clientDTO.getClientCPF())).thenReturn(null);
 
-        assertThrows(ClientNotFoundException.class, () -> clientService.updateClient(clientDTO.getId(), clientDTO));
+        assertThrows(ClientNotFoundException.class, () -> clientService.updateClient(clientDTO));
     }
 
     @Test
     void whenPhoneNumberForUpdateIsInvalid() {
-        ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
         Client expectedClient = clientDTO.toDTO();
-        ClientDTO invalidClient = new ClientDTO(clientDTO.getId(), "Gabriel",INVALID_PHONE_NUMBER,"teste","938.447.860-15",  "01.120.328/0001-04");
+        ClientDTO invalidClient = new ClientDTO("Gabriel",INVALID_PHONE_NUMBER,"teste","938.447.860-15",  "01.120.328/0001-04");
 
         when(clientRepository.findById(expectedClient.getId())).thenReturn(Optional.of(expectedClient));
         when(clientRepository.save(expectedClient)).thenReturn(expectedClient);
 
-        assertThrows(DocumentationException.class, () -> clientService.updateClient(expectedClient.getId(),invalidClient));
+        assertThrows(DocumentationException.class, () -> clientService.updateClient(invalidClient));
     }
 
     @Test
     void whenDeleteClientWithSuccess() {
-        ClientDTO clientDeleteDTO = ClientDTOBuilder.builder().build().toClientDTO();
-        Client expectedDeleteClient = clientDeleteDTO.toDTO();
+        Client expectedDeleteClient = clientDTO.toDTO();
 
-        when(clientRepository.findById(clientDeleteDTO.getId())).thenReturn(Optional.ofNullable(expectedDeleteClient));
-        doNothing().when(clientRepository).deleteById(clientDeleteDTO.getId());
+        when(clientRepository.findById(clientDTO.getId())).thenReturn(Optional.ofNullable(expectedDeleteClient));
+        doNothing().when(clientRepository).deleteById(clientDTO.getId());
 
-        clientService.deleteClientById(clientDeleteDTO.getId());
+        clientService.deleteClientById(clientDTO.getId());
 
-        verify(clientRepository, times(1)).findById(clientDeleteDTO.getId());
-        verify(clientRepository, times(1)).deleteById(clientDeleteDTO.getId());
+        verify(clientRepository, times(1)).findById(clientDTO.getId());
+        verify(clientRepository, times(1)).deleteById(clientDTO.getId());
     }
 
     @Test

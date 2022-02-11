@@ -63,6 +63,14 @@ public class ResourceExceptionHandler {
         return ResponseEntity.status(status).body(err);
     }
 
+    @ExceptionHandler(CouldNotCompleteTheRequest.class)
+    public ResponseEntity<StandardError> kafkaError(CouldNotCompleteTheRequest e, HttpServletRequest request) {
+        String error = "Services error";
+        HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
+        StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<StandardError> invalidDocument(MethodArgumentNotValidException e, HttpServletRequest request) {
         String error = "Documentation error";

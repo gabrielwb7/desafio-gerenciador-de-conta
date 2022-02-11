@@ -3,6 +3,7 @@ package com.desafio.manageraccount.entities;
 import com.desafio.manageraccount.entities.enums.TypeOperations;
 import com.desafio.manageraccount.entities.enums.TypeStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,12 +14,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@javax.persistence.Entity(name = "operations")
 public class Operations {
 
     @Id

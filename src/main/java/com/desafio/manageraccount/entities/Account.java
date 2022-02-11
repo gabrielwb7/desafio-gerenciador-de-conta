@@ -12,10 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Entity
+
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@javax.persistence.Entity(name = "accounts")
 public class Account {
 
     @Id
@@ -27,10 +28,10 @@ public class Account {
     private String agency;
 
     @Column(nullable = false)
-    private Integer numberAccount;
+    private String numberAccount;
 
     @Column(nullable = false)
-    private Integer verifyDigit;
+    private String verifyDigit;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

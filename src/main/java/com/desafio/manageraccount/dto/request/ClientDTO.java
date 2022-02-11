@@ -6,8 +6,6 @@ import org.hibernate.validator.constraints.br.CNPJ;
 import org.hibernate.validator.constraints.br.CPF;
 
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class ClientDTO {
 
@@ -20,6 +18,13 @@ public class ClientDTO {
     @CNPJ
     private String clientCNPJ;
 
+    public ClientDTO(String name, String phoneNumber, String address, String clientCPF, String clientCNPJ) {
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.clientCPF = clientCPF;
+        this.clientCNPJ = clientCNPJ;
+    }
 
     public Client toDTO() {
         return new Client(name, clientCPF, clientCNPJ, phoneNumber, address);

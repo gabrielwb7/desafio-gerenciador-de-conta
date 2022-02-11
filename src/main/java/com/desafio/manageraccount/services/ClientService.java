@@ -54,10 +54,19 @@ public class ClientService {
         return  clientRepository.save(clientDTO.toDTO());
     }
 
-    public Client updateClient(Long id, ClientDTO clientDTO) {
+    public Client updateClient(ClientDTO clientDTO) {
 
-        Client updateClient = idIsExist(id);
+        validateData(clientDTO);
         validatePhoneNumber(clientDTO);
+
+        Client updateClient = clientIsExist(clientDTO);
+
+        if (updateClient.getClientCNPJ() == null && clientDTO.getClientCNPJ() != null) {
+            if (!Objects.isNull(clientRepository.findByClientCNPJ(clientDTO.getClientCNPJ()))) {
+                throw new DocumentationException("O CNPJ já está cadastrado.");
+            }
+            updateClient.setClientCNPJ(clientDTO.getClientCNPJ());
+        }
 
         updateClient.setName(clientDTO.getName());
         updateClient.setAddress(clientDTO.getAddress());
@@ -69,6 +78,23 @@ public class ClientService {
     public void deleteClientById(Long id) {
         idIsExist(id);
         clientRepository.deleteById(id);
+    }
+
+    private Client clientIsExist(ClientDTO clientDTO) {
+        Client client = new Client();
+        if (clientDTO.getClientCPF() != null) {
+            if (clientRepository.findByClientCPF(clientDTO.getClientCPF()) == null) {
+                throw new ClientNotFoundException("Não foi encontrado o cliente com esse CPF: " + clientDTO.getClientCPF());
+            }
+            client = clientRepository.findByClientCPF(clientDTO.getClientCPF());
+        }
+        else {
+            if (clientRepository.findByClientCNPJ(clientDTO.getClientCNPJ()) == null) {
+                throw new ClientNotFoundException("Não foi encontrado o cliente com esse CNPJ: " + clientDTO.getClientCNPJ());
+            }
+            client = clientRepository.findByClientCNPJ(clientDTO.getClientCNPJ());
+        }
+        return client;
     }
 
     private void validatePhoneNumber(ClientDTO clientDTO) {
@@ -83,7 +109,7 @@ public class ClientService {
         }
     }
 
-    private Client idIsExist(Long id) {
-        return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(String.format("O cliente com esse id %d não foi encontrado", id)));
+    private void idIsExist(Long id) {
+        clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(String.format("O cliente com esse id %d não foi encontrado", id)));
     }
 }

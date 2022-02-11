@@ -9,8 +9,8 @@ import lombok.Getter;
 public class AccountResponseDTO {
 
     private String agency;
-    private Integer numberAccount;
-    private Integer verifyDigit;
+    private String numberAccount;
+    private String verifyDigit;
 
     public static AccountResponseDTO toDTO (Account account) {
         return new AccountResponseDTO(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit());

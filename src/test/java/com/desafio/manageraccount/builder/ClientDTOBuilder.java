@@ -21,6 +21,6 @@ public class ClientDTOBuilder {
     private String clientCNPJ = "01.120.328/0001-04";
 
     public ClientDTO toClientDTO () {
-        return new ClientDTO(id,name,phoneNumber,address,clientCPF,clientCNPJ);
+        return new ClientDTO(name,phoneNumber,address,clientCPF,clientCNPJ);
     }
 }

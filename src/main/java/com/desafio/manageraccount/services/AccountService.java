@@ -1,5 +1,6 @@
 package com.desafio.manageraccount.services;
 
+import com.desafio.manageraccount.config.ProduceMessage;
 import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
@@ -8,8 +9,8 @@ import com.desafio.manageraccount.repositories.AccountRepository;
 import com.desafio.manageraccount.repositories.ClientRepository;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.ClientNotFoundException;
+import com.desafio.manageraccount.services.exceptions.CouldNotCompleteTheRequest;
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
@@ -17,16 +18,15 @@ import java.util.List;
 import java.util.Random;
 
 @Service
-public class AccountService {
+public class AccountService extends ProduceMessage{
 
     private final AccountRepository accountRepository;
     private final ClientRepository clientRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final Random random = new Random();
 
-    public AccountService(AccountRepository accountRepository, ClientRepository clientRepository, KafkaTemplate<String, String> kafkaTemplate) {
+    public AccountService(AccountRepository accountRepository, ClientRepository clientRepository) {
         this.accountRepository = accountRepository;
         this.clientRepository = clientRepository;
-        this.kafkaTemplate = kafkaTemplate;
     }
 
     public List<Account> listAllAccounts() {
@@ -44,11 +44,15 @@ public class AccountService {
             throw new DocumentationException("O cliente não tem CNPJ cadastrado para abrir conta juridica");
         }
 
-        Account createAccount = accountRepository.save(validatesDataAccount(accountDTO));
+        Account createAccount = validatesDataAccount(accountDTO);
         createAccount.setClient(client);
         createAccount.setQuantityWithdraw(createAccount.getTypeAccount().getMaxLimitWithdrawals());
-        setWithdraws(createAccount);
-
+        String data = String.format("{\"id\":%d,\"limitWithdraw\":\"%d\"}", accountRepository.nextID(), createAccount.getTypeAccount().getMaxLimitWithdrawals());
+        try {
+            sendMessage("NEW_ACCOUNT", data);
+        } catch (Exception e) {
+            throw new CouldNotCompleteTheRequest("Serviço indisponivel");
+        }
         return accountRepository.save(createAccount);
     }
 
@@ -92,8 +96,16 @@ public class AccountService {
         return clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException(("O cliente com o id " + id + " não foi encontrado")));
     }
 
+    private String generateNumberForAccount() {
+        StringBuilder numberAccount = new StringBuilder(Integer.toString(random.nextInt(10)));
+
+        for (int i = 0; i < 4; i++) {
+            numberAccount.append(random.nextInt(10));
+        }
+        return String.valueOf(numberAccount);
+    }
+
     private Account validatesDataAccount(AccountDTO accountDTO) {
-        Random random = new Random();
         Account account = accountDTO.toDTO();
 
         boolean validate = account.getAgency().matches("^\\d+$");
@@ -102,19 +114,14 @@ public class AccountService {
                     + "agency - " + accountDTO.getAgency());
         }
 
-        account.setNumberAccount(random.nextInt(99999));
-        account.setVerifyDigit(random.nextInt(9));
+        account.setNumberAccount(generateNumberForAccount());
+        account.setVerifyDigit(Integer.toString(random.nextInt(10)));
 
         while(accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit()) != null) {
-            account.setNumberAccount(random.nextInt(99999));
-            account.setVerifyDigit(random.nextInt(9));
+            account.setNumberAccount(generateNumberForAccount());
+            account.setVerifyDigit(Integer.toString(random.nextInt(10)));
         }
         return account;
-    }
-
-    private void setWithdraws(Account account) {
-        String data = String.format("{\"id\":%d,\"limitWithdraw\":\"%d\"}", account.getId(), account.getTypeAccount().getMaxLimitWithdrawals());
-        kafkaTemplate.send("newAccount", data);
     }
 
 }
