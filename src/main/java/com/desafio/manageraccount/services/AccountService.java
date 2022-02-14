@@ -74,8 +74,8 @@ public class AccountService extends ProduceMessage{
 
     public Account consultWithdrawFree(Long id) {
 
-        Jedis jedis = new Jedis();
         Account account = idIsExist(id);
+        Jedis jedis = new Jedis();
 
         account.setQuantityWithdraw(Integer.valueOf(jedis.get(Long.toString(id))));
 

@@ -56,6 +56,14 @@ public class Account {
         this.typeAccount = typeAccount;
     }
 
+    public Account(Long id, String agency, String numberAccount, String verifyDigit, TypeAccount typeAccount) {
+        this.id = id;
+        this.agency = agency;
+        this.numberAccount = numberAccount;
+        this.verifyDigit = verifyDigit;
+        this.typeAccount = typeAccount;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

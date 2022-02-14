@@ -147,7 +147,7 @@ public class OperationsServices extends ProduceMessage {
         }
         if (operation.getTypeOperations() != TypeOperations.DEPOSIT) {
             if (operation.getAmount() > account.getBalanceAccount()) {
-                throw new InvalidOperationExceptions("Não tem saldo suficiente para fazer o saque.");
+                throw new InvalidOperationExceptions("Não tem saldo suficiente para fazer a operação.");
             }
         }
     }

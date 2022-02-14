@@ -13,6 +13,7 @@ import javax.persistence.Enumerated;
 @NoArgsConstructor
 public class AccountDTO {
 
+    private Long id;
     @Enumerated(EnumType.STRING)
     private TypeAccount typeAccount;
     private String agency;
