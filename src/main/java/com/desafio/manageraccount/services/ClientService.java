@@ -45,13 +45,13 @@ public class ClientService {
         validateData(clientDTO);
         validatePhoneNumber(clientDTO);
 
-        if (!Objects.isNull(clientRepository.findByClientCPF(clientDTO.getClientCPF()))) {
+        if (clientDTO.getClientCPF() != null && !Objects.isNull(clientRepository.findByClientCPF(clientDTO.getClientCPF()))) {
             throw new DocumentationException("O CPF já está cadastrado.");
         }
-        if (!Objects.isNull(clientRepository.findByClientCNPJ(clientDTO.getClientCNPJ()))) {
+        if (clientDTO.getClientCNPJ() != null && !Objects.isNull(clientRepository.findByClientCNPJ(clientDTO.getClientCNPJ()))) {
             throw new DocumentationException("O CNPJ já está cadastrado.");
         }
-        return  clientRepository.save(clientDTO.toDTO());
+        return clientRepository.save(clientDTO.toDTO());
     }
 
     public Client updateClient(ClientDTO clientDTO) {
@@ -81,7 +81,7 @@ public class ClientService {
     }
 
     private Client clientIsExist(ClientDTO clientDTO) {
-        Client client = new Client();
+        Client client;
         if (clientDTO.getClientCPF() != null) {
             if (clientRepository.findByClientCPF(clientDTO.getClientCPF()) == null) {
                 throw new ClientNotFoundException("Não foi encontrado o cliente com esse CPF: " + clientDTO.getClientCPF());

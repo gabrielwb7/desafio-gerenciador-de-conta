@@ -37,26 +37,26 @@ public class OperationsController {
 
     @PostMapping("/withdraw")
     public ResponseEntity<ResponseWithdraw> withdraw(@RequestBody Operations operation, @RequestParam Long id) {
-       Operations newOperation = operationsServices.withdraw(id, operation);
+        Long idTemp = (long) (operationsServices.operationsList().size() + 1);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(newOperation.getIdOperation()).toUri();
-        return ResponseEntity.created(uri).body(ResponseWithdraw.responseWithdraw(newOperation));
+                .buildAndExpand(idTemp).toUri();
+        return ResponseEntity.created(uri).body(ResponseWithdraw.responseWithdraw(operationsServices.withdraw(id, operation)));
     }
 
     @PostMapping("/deposit")
     public ResponseEntity<ResponseDeposit> deposit(@RequestBody Operations operation, @RequestParam Long id) {
-       Operations newOperation = operationsServices.deposit(id, operation);
+        Long idTemp = (long) (operationsServices.operationsList().size() + 1);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(newOperation.getIdOperation()).toUri();
-        return ResponseEntity.created(uri).body(ResponseDeposit.responseDeposit(newOperation));
+                .buildAndExpand(idTemp).toUri();
+        return ResponseEntity.created(uri).body(ResponseDeposit.responseDeposit(operationsServices.deposit(id, operation)));
     }
 
     @PostMapping("/transfer")
     public ResponseEntity<ResponseTransfer> transfer(@RequestBody Operations operation, @RequestParam Long id) {
-       Operations newOperation = operationsServices.bankTransfer(id, operation);
+        Long idTemp = (long) (operationsServices.operationsList().size() + 1);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(newOperation.getIdOperation()).toUri();
-        return ResponseEntity.created(uri).body(ResponseTransfer.responseTransfer(newOperation));
+                .buildAndExpand(idTemp).toUri();
+        return ResponseEntity.created(uri).body(ResponseTransfer.responseTransfer(operationsServices.bankTransfer(id, operation)));
     }
 
 }

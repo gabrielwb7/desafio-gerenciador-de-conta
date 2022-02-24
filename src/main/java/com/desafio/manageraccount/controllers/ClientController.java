@@ -36,10 +36,11 @@ public class ClientController {
 
     @PostMapping
     public ResponseEntity<Client> insertClient(@RequestBody  @Valid ClientDTO clientDTO) {
-        Client client = clientService.insertClient(clientDTO);
+        Long idTemp = (long) (clientService.listAllClients().size() + 1);
+
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(client.getId()).toUri();
-        return ResponseEntity.created(uri).body(client);
+                .buildAndExpand(idTemp).toUri();
+        return ResponseEntity.created(uri).body(clientService.insertClient(clientDTO));
     }
 
     @PutMapping

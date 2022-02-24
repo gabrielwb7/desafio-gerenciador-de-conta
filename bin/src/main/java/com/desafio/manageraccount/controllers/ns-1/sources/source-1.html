@@ -1,0 +1,232 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > AccountService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/highlight-idea.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.pack.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.desafio.manageraccount.services</a>
+</div>
+
+<h1>Coverage Summary for Class: AccountService (com.desafio.manageraccount.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AccountService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (11/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72%
+  </span>
+  <span class="absValue">
+    (36/50)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<div class="sourceCode" id="sourceCode"><i class="no-highlight">1</i>&nbsp;package com.desafio.manageraccount.services;
+<i class="no-highlight">2</i>&nbsp;
+<i class="no-highlight">3</i>&nbsp;import com.desafio.manageraccount.config.ProduceMessage;
+<i class="no-highlight">4</i>&nbsp;import com.desafio.manageraccount.dto.request.AccountDTO;
+<i class="no-highlight">5</i>&nbsp;import com.desafio.manageraccount.entities.Account;
+<i class="no-highlight">6</i>&nbsp;import com.desafio.manageraccount.entities.Client;
+<i class="no-highlight">7</i>&nbsp;import com.desafio.manageraccount.entities.enums.TypeAccount;
+<i class="no-highlight">8</i>&nbsp;import com.desafio.manageraccount.repositories.AccountRepository;
+<i class="no-highlight">9</i>&nbsp;import com.desafio.manageraccount.repositories.ClientRepository;
+<i class="no-highlight">10</i>&nbsp;import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
+<i class="no-highlight">11</i>&nbsp;import com.desafio.manageraccount.services.exceptions.ClientNotFoundException;
+<i class="no-highlight">12</i>&nbsp;import com.desafio.manageraccount.services.exceptions.CouldNotCompleteTheRequest;
+<i class="no-highlight">13</i>&nbsp;import com.desafio.manageraccount.services.exceptions.DocumentationException;
+<i class="no-highlight">14</i>&nbsp;import org.springframework.stereotype.Service;
+<i class="no-highlight">15</i>&nbsp;import redis.clients.jedis.Jedis;
+<i class="no-highlight">16</i>&nbsp;
+<i class="no-highlight">17</i>&nbsp;import java.util.List;
+<i class="no-highlight">18</i>&nbsp;import java.util.Random;
+<i class="no-highlight">19</i>&nbsp;
+<i class="no-highlight">20</i>&nbsp;@Service
+<i class="no-highlight">21</i>&nbsp;public class AccountService extends ProduceMessage{
+<i class="no-highlight">22</i>&nbsp;
+<i class="no-highlight">23</i>&nbsp;    private final AccountRepository accountRepository;
+<i class="no-highlight">24</i>&nbsp;    private final ClientRepository clientRepository;
+<b class="fc"><i class="no-highlight">25</i>&nbsp;    private final Random random = new Random();</b>
+<i class="no-highlight">26</i>&nbsp;
+<b class="fc"><i class="no-highlight">27</i>&nbsp;    public AccountService(AccountRepository accountRepository, ClientRepository clientRepository) {</b>
+<b class="fc"><i class="no-highlight">28</i>&nbsp;        this.accountRepository = accountRepository;</b>
+<b class="fc"><i class="no-highlight">29</i>&nbsp;        this.clientRepository = clientRepository;</b>
+<i class="no-highlight">30</i>&nbsp;    }
+<i class="no-highlight">31</i>&nbsp;
+<i class="no-highlight">32</i>&nbsp;    public List&lt;Account&gt; listAllAccounts() {
+<b class="fc"><i class="no-highlight">33</i>&nbsp;        return accountRepository.findAll();</b>
+<i class="no-highlight">34</i>&nbsp;    }
+<i class="no-highlight">35</i>&nbsp;
+<i class="no-highlight">36</i>&nbsp;    public Account insertAccount(AccountDTO accountDTO, Long id) {
+<i class="no-highlight">37</i>&nbsp;
+<b class="fc"><i class="no-highlight">38</i>&nbsp;        Client client = clientIsExist(id);</b>
+<i class="no-highlight">39</i>&nbsp;
+<b class="fc"><i class="no-highlight">40</i>&nbsp;        if (accountDTO.getTypeAccount() == TypeAccount.REGULARPERSON &amp;&amp; client.getClientCPF() == null) {</b>
+<b class="fc"><i class="no-highlight">41</i>&nbsp;            throw new DocumentationException(&quot;O cliente não tem CPF cadastrado para abrir conta normal&quot;);</b>
+<i class="no-highlight">42</i>&nbsp;        }
+<b class="fc"><i class="no-highlight">43</i>&nbsp;        if (accountDTO.getTypeAccount() == TypeAccount.LEGALPERSON &amp;&amp; client.getClientCNPJ() == null) {</b>
+<b class="fc"><i class="no-highlight">44</i>&nbsp;            throw new DocumentationException(&quot;O cliente não tem CNPJ cadastrado para abrir conta juridica&quot;);</b>
+<i class="no-highlight">45</i>&nbsp;        }
+<i class="no-highlight">46</i>&nbsp;
+<b class="fc"><i class="no-highlight">47</i>&nbsp;        Account createAccount = validatesDataAccount(accountDTO);</b>
+<b class="nc"><i class="no-highlight">48</i>&nbsp;        createAccount.setClient(client);</b>
+<b class="nc"><i class="no-highlight">49</i>&nbsp;        createAccount.setQuantityWithdraw(createAccount.getTypeAccount().getMaxLimitWithdrawals());</b>
+<b class="nc"><i class="no-highlight">50</i>&nbsp;        String data = String.format(&quot;{\&quot;id\&quot;:%d,\&quot;limitWithdraw\&quot;:\&quot;%d\&quot;}&quot;, accountRepository.nextID(), createAccount.getTypeAccount().getMaxLimitWithdrawals());</b>
+<i class="no-highlight">51</i>&nbsp;        try {
+<b class="nc"><i class="no-highlight">52</i>&nbsp;            sendMessage(&quot;NEW_ACCOUNT&quot;, data);</b>
+<b class="nc"><i class="no-highlight">53</i>&nbsp;        } catch (Exception e) {</b>
+<b class="nc"><i class="no-highlight">54</i>&nbsp;            throw new CouldNotCompleteTheRequest(&quot;Serviço indisponivel&quot;);</b>
+<b class="nc"><i class="no-highlight">55</i>&nbsp;        }</b>
+<b class="nc"><i class="no-highlight">56</i>&nbsp;        return accountRepository.save(createAccount);</b>
+<i class="no-highlight">57</i>&nbsp;    }
+<i class="no-highlight">58</i>&nbsp;
+<i class="no-highlight">59</i>&nbsp;    public void delete(Long id) {
+<b class="fc"><i class="no-highlight">60</i>&nbsp;        idIsExist(id);</b>
+<b class="fc"><i class="no-highlight">61</i>&nbsp;        accountRepository.deleteById(id);</b>
+<i class="no-highlight">62</i>&nbsp;    }
+<i class="no-highlight">63</i>&nbsp;
+<i class="no-highlight">64</i>&nbsp;    public Account updateAccount(Long id, AccountDTO accountDTO) {
+<b class="fc"><i class="no-highlight">65</i>&nbsp;        Account beforeAccount = idIsExist(id);</b>
+<b class="fc"><i class="no-highlight">66</i>&nbsp;        Account updateAccount = validatesDataAccount(accountDTO);</b>
+<i class="no-highlight">67</i>&nbsp;
+<b class="fc"><i class="no-highlight">68</i>&nbsp;        beforeAccount.setNumberAccount(updateAccount.getNumberAccount());</b>
+<b class="fc"><i class="no-highlight">69</i>&nbsp;        beforeAccount.setAgency(updateAccount.getAgency());</b>
+<b class="fc"><i class="no-highlight">70</i>&nbsp;        beforeAccount.setVerifyDigit(updateAccount.getVerifyDigit());</b>
+<i class="no-highlight">71</i>&nbsp;
+<b class="fc"><i class="no-highlight">72</i>&nbsp;        return accountRepository.save(beforeAccount);</b>
+<i class="no-highlight">73</i>&nbsp;    }
+<i class="no-highlight">74</i>&nbsp;
+<i class="no-highlight">75</i>&nbsp;    public Account consultWithdrawFree(Long id) {
+<i class="no-highlight">76</i>&nbsp;
+<b class="fc"><i class="no-highlight">77</i>&nbsp;        Account account = idIsExist(id);</b>
+<b class="nc"><i class="no-highlight">78</i>&nbsp;        Jedis jedis = new Jedis();</b>
+<i class="no-highlight">79</i>&nbsp;
+<b class="nc"><i class="no-highlight">80</i>&nbsp;        account.setQuantityWithdraw(Integer.valueOf(jedis.get(Long.toString(id))));</b>
+<i class="no-highlight">81</i>&nbsp;
+<b class="nc"><i class="no-highlight">82</i>&nbsp;        accountRepository.save(account);</b>
+<i class="no-highlight">83</i>&nbsp;
+<b class="nc"><i class="no-highlight">84</i>&nbsp;        return account;</b>
+<i class="no-highlight">85</i>&nbsp;    }
+<i class="no-highlight">86</i>&nbsp;
+<i class="no-highlight">87</i>&nbsp;    public Account accountById(Long id) {
+<b class="fc"><i class="no-highlight">88</i>&nbsp;        return idIsExist(id);</b>
+<i class="no-highlight">89</i>&nbsp;    }
+<i class="no-highlight">90</i>&nbsp;
+<i class="no-highlight">91</i>&nbsp;    private Account idIsExist(Long id) {
+<b class="fc"><i class="no-highlight">92</i>&nbsp;        return accountRepository.findById(id).orElseThrow(() -&gt; new AccountNotFoundException(&quot;A conta com o id &quot; + id +&quot; não existe&quot;));</b>
+<i class="no-highlight">93</i>&nbsp;    }
+<i class="no-highlight">94</i>&nbsp;
+<i class="no-highlight">95</i>&nbsp;    private Client clientIsExist(Long id) {
+<b class="fc"><i class="no-highlight">96</i>&nbsp;        return clientRepository.findById(id).orElseThrow(() -&gt; new ClientNotFoundException((&quot;O cliente com o id &quot; + id + &quot; não foi encontrado&quot;)));</b>
+<i class="no-highlight">97</i>&nbsp;    }
+<i class="no-highlight">98</i>&nbsp;
+<i class="no-highlight">99</i>&nbsp;    private String generateNumberForAccount() {
+<b class="fc"><i class="no-highlight">100</i>&nbsp;        StringBuilder numberAccount = new StringBuilder(Integer.toString(random.nextInt(10)));</b>
+<i class="no-highlight">101</i>&nbsp;
+<b class="fc"><i class="no-highlight">102</i>&nbsp;        for (int i = 0; i &lt; 4; i++) {</b>
+<b class="fc"><i class="no-highlight">103</i>&nbsp;            numberAccount.append(random.nextInt(10));</b>
+<i class="no-highlight">104</i>&nbsp;        }
+<b class="fc"><i class="no-highlight">105</i>&nbsp;        return String.valueOf(numberAccount);</b>
+<i class="no-highlight">106</i>&nbsp;    }
+<i class="no-highlight">107</i>&nbsp;
+<i class="no-highlight">108</i>&nbsp;    private Account validatesDataAccount(AccountDTO accountDTO) {
+<b class="fc"><i class="no-highlight">109</i>&nbsp;        Account account = accountDTO.toDTO();</b>
+<i class="no-highlight">110</i>&nbsp;
+<b class="fc"><i class="no-highlight">111</i>&nbsp;        boolean validate = account.getAgency().matches(&quot;^\\d+$&quot;);</b>
+<b class="fc"><i class="no-highlight">112</i>&nbsp;        if (!validate) {</b>
+<b class="fc"><i class="no-highlight">113</i>&nbsp;            throw new DocumentationException(&quot;O número da agência está incorreto: &quot;</b>
+<b class="fc"><i class="no-highlight">114</i>&nbsp;                    + &quot;agency - &quot; + accountDTO.getAgency());</b>
+<i class="no-highlight">115</i>&nbsp;        }
+<i class="no-highlight">116</i>&nbsp;
+<b class="fc"><i class="no-highlight">117</i>&nbsp;        account.setNumberAccount(generateNumberForAccount());</b>
+<b class="fc"><i class="no-highlight">118</i>&nbsp;        account.setVerifyDigit(Integer.toString(random.nextInt(10)));</b>
+<i class="no-highlight">119</i>&nbsp;
+<b class="fc"><i class="no-highlight">120</i>&nbsp;        while(accountRepository.findByAgencyAndNumberAccountAndVerifyDigit(account.getAgency(), account.getNumberAccount(), account.getVerifyDigit()) != null) {</b>
+<b class="nc"><i class="no-highlight">121</i>&nbsp;            account.setNumberAccount(generateNumberForAccount());</b>
+<b class="nc"><i class="no-highlight">122</i>&nbsp;            account.setVerifyDigit(Integer.toString(random.nextInt(10)));</b>
+<i class="no-highlight">123</i>&nbsp;        }
+<b class="fc"><i class="no-highlight">124</i>&nbsp;        return account;</b>
+<i class="no-highlight">125</i>&nbsp;    }
+<i class="no-highlight">126</i>&nbsp;
+<i class="no-highlight">127</i>&nbsp;}
+</div>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+        var codeBlock = document.getElementById('sourceCode');
+
+        if (codeBlock) {
+            hljs.highlightBlock(codeBlock);
+        }
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2022-02-15 09:41</div>
+</div>
+</body>
+</html>

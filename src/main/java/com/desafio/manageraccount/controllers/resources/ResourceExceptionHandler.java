@@ -23,14 +23,6 @@ public class ResourceExceptionHandler {
         return ResponseEntity.status(status).body(err);
     }
 
-    @ExceptionHandler(AccountAlreadyRegisteredException.class)
-    public ResponseEntity<StandardError> accountAlreadyRegistered(AccountAlreadyRegisteredException e, HttpServletRequest request) {
-        String error = "Registered error";
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
-    }
-
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<StandardError> accountNotFound(AccountNotFoundException e, HttpServletRequest request) {
         String error = "Account not found";

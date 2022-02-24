@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -43,16 +44,16 @@ public class AccountControler {
     }
 
     @PostMapping
-    public ResponseEntity<AccountResponseDTO> insertAccount(@RequestBody @Valid AccountDTO accountDTO, @RequestParam Long id) {
-        Account account = accountService.insertAccount(accountDTO, id);
+    public ResponseEntity<AccountResponseDTO> insertAccount(@RequestBody @Valid AccountDTO accountDTO, @RequestParam Long id) throws IOException {
+        Long idTemp = (long) (accountService.listAllAccounts().size() + 1);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(account.getId()).toUri();
-        return ResponseEntity.created(uri).body(AccountResponseDTO.toDTO(account));
+                .buildAndExpand(idTemp).toUri();
+        return ResponseEntity.created(uri).body(AccountResponseDTO.toDTO(accountService.insertAccount(accountDTO, id)));
     }
 
     @PutMapping
-    public ResponseEntity<AccountResponseDTO> updateAccount(@RequestParam Long id, @RequestBody @Valid AccountDTO accountDTO) {
-        return ResponseEntity.ok().body(AccountResponseDTO.toDTO(accountService.updateAccount(id, accountDTO)));
+    public ResponseEntity<AccountResponseDTO> updateAccount(@RequestBody @Valid AccountDTO accountDTO) {
+        return ResponseEntity.ok().body(AccountResponseDTO.toDTO(accountService.updateAccount(accountDTO)));
     }
 
     @DeleteMapping

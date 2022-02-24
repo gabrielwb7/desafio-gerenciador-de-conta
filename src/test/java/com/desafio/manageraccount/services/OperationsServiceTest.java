@@ -1,16 +1,11 @@
 package com.desafio.manageraccount.services;
 
 import com.desafio.manageraccount.builder.AccountDTOBuilder;
-import com.desafio.manageraccount.builder.ClientDTOBuilder;
 import com.desafio.manageraccount.dto.request.AccountDTO;
-import com.desafio.manageraccount.dto.request.ClientDTO;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Operations;
-import com.desafio.manageraccount.entities.Tax;
-import com.desafio.manageraccount.entities.enums.TypeOperations;
-import com.desafio.manageraccount.entities.enums.TypeStatus;
+import com.desafio.manageraccount.entities.enums.TypeAccount;
 import com.desafio.manageraccount.repositories.AccountRepository;
-import com.desafio.manageraccount.repositories.ClientRepository;
 import com.desafio.manageraccount.repositories.OperationsRepository;
 import com.desafio.manageraccount.services.exceptions.AccountNotFoundException;
 import com.desafio.manageraccount.services.exceptions.BankingOperationsNotFound;
@@ -24,6 +19,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,6 +31,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -46,23 +45,17 @@ public class OperationsServiceTest {
     @Mock
     private AccountRepository accountRepository;
 
-    @Mock
-    private ClientRepository clientRepository;
-
     @InjectMocks
     private OperationsServices operationsServices;
 
-    @InjectMocks
-    private AccountService accountService;
+    private final JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost",6379);
+    private final Jedis jedis = pool.getResource();
 
-    private static final long INVALID_ACCOUNT_ID = 1L;
-    private static final ClientDTO clientDTO = ClientDTOBuilder.builder().build().toClientDTO();
     private static final AccountDTO accountDTO = AccountDTOBuilder.builder().build().accountDTO();
-    private final Tax tax = new Tax();
     private final Operations operation = new Operations(1L,
-            TypeOperations.DEPOSIT,
+            null,
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
-            100.0, TypeStatus.CONCLUDED, 0.0, null, null, null, null);
+            100.0, null, 0.0, null, null, null, null);
 
     @Test
     void whenListAccountsIsCalledThenReturnAnEmptyListOfOperations() {
@@ -93,24 +86,24 @@ public class OperationsServiceTest {
         assertThrows(AccountNotFoundException.class, () -> operationsServices.statement(account.getId()));
     }
 
-//    @Test
-//    void whenTheBankStatemenIsMadeSuccessfully() {
-//        Account account = new Account(1L,"2222","11111","1", TypeAccount.REGULARPERSON);
-//
-//        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-//        when(accountRepository.save(account)).thenReturn(account);
-//        when(operationsRepository.findAll()).thenReturn(Collections.singletonList(operation));
-//
-//        Operations operationTest = operationsServices.deposit(account.getId(),operation);
-//
-//        when(operationsRepository.save(operationTest)).thenReturn(operationTest);
-//
-//        List<Operations> operationsList = operationsServices.statement(account.getId());
-//
-//        assertThat(operationsList, Matchers.is(Matchers.not(empty())));
-//        assertThat(operationsList.get(0), Matchers.is(Matchers.equalTo(operation)));
-//
-//    }
+    @Test
+    void whenTheBankStatemenIsMadeSuccessfully() {
+        Account account = new Account(1L,"2222","11111","1", TypeAccount.REGULARPERSON);
+
+        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
+        when(accountRepository.getById(account.getId())).thenReturn(account);
+        when(accountRepository.save(account)).thenReturn(account);
+        when(operationsRepository.findByAccountId(account.getId())).thenReturn(Collections.singletonList(operation));
+        when(operationsRepository.findByAccountDestinyAndAgencyDestinyAndDestinyVerifyDigit("11111","2222", "1")).thenReturn(Collections.EMPTY_LIST);
+
+        Operations operationTest = operationsServices.deposit(account.getId(),operation);
+
+        List<Operations> operationsList = operationsServices.statement(account.getId());
+
+        assertThat(operationsList, Matchers.is(Matchers.not(empty())));
+        assertThat(operationsList.get(0), Matchers.is(Matchers.equalTo(operation)));
+
+    }
 
     @Test
     void whenTheIdOperationInformedIsNoExist() {
@@ -135,9 +128,9 @@ public class OperationsServiceTest {
     void whenInformedInvalidAmountForOperation() {
         Account account = accountDTO.toDTO();
         Operations operationInvalidAmount = new Operations(1L,
-                TypeOperations.DEPOSIT,
+                null,
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
-                -100.0, TypeStatus.CONCLUDED, 0.0, null, null, null, null);
+                -100.0, null, 0.0, null, null, null, null);
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
         when(accountRepository.save(account)).thenReturn(account);
@@ -159,12 +152,24 @@ public class OperationsServiceTest {
     }
 
     @Test
+    void whenDepositWithSucess() {
+        Account account = accountDTO.toDTO();
+
+        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        operationsServices.deposit(account.getId(),operation);
+
+        assertEquals(account.getBalanceAccount(), 100.0);
+    }
+
+    @Test
     void whenInformedDataAccountDestinyIsInvalid() {
         Account account = accountDTO.toDTO();
         Operations operationInvalidData = new Operations(1L,
-                TypeOperations.DEPOSIT,
+                null,
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
-                100.0, TypeStatus.CONCLUDED, 0.0, "22f22", "1444", "1", null);
+                100.0, null, 0.0, "22f22", "1444", "1", null);
 
         account.setBalanceAccount(150.0);
 
@@ -178,9 +183,9 @@ public class OperationsServiceTest {
     void whenInformedAccountDestinyIsNotExist() {
         Account account = accountDTO.toDTO();
         Operations operationInvalidData = new Operations(1L,
-                TypeOperations.DEPOSIT,
+               null,
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
-                100.0, TypeStatus.CONCLUDED, 0.0, "22222", "1444", "1", null);
+                100.0, null, 0.0, "22222", "1444", "1", null);
 
         account.setBalanceAccount(150.0);
 
@@ -189,6 +194,83 @@ public class OperationsServiceTest {
 
         assertThrows(AccountNotFoundException.class, () -> operationsServices.bankTransfer(account.getId(), operationInvalidData));
     }
+
+
+    @Test
+    void whenBankTransforWithSuccess() {
+        Account account = accountDTO.toDTO();
+        Account accountDestiny = new Account(2L, "1444", "22222", "1", TypeAccount.REGULARPERSON);
+        Operations operationBankTransfer = new Operations(1L,
+                null,
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
+                100.0, null, 0.0, "22222", "1444", "1", null);
+
+        account.setBalanceAccount(150.0);
+
+        when(accountRepository.findById(accountDestiny.getId())).thenReturn(Optional.of(accountDestiny));
+        when(accountRepository.save(accountDestiny)).thenReturn(accountDestiny);
+
+        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+        when(accountRepository.findByAgencyAndNumberAccountAndVerifyDigit("1444","22222", "1")).thenReturn(accountDestiny);
+
+        operationsServices.bankTransfer(account.getId(),operationBankTransfer);
+
+        assertEquals(account.getBalanceAccount(), 50.0);
+        assertEquals(accountDestiny.getBalanceAccount(), 100.0);
+    }
+
+    @Test
+    void whenTheWithdrawalIsMadeWithoutFee() {
+        Account account = new Account(1L, "1444", "22222", "1", TypeAccount.REGULARPERSON);
+        account.setBalanceAccount(150.0);
+
+        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        jedis.set(Long.toString(1L), "5");
+        operationsServices.withdraw(account.getId(), operation);
+
+        assertEquals(50.0, account.getBalanceAccount());
+    }
+
+    @Test
+    void whenTheWithdrawalIsMadeWithAFee() {
+        Account account = new Account(1L, "1444", "22222", "1", TypeAccount.REGULARPERSON);
+        account.setBalanceAccount(150.0);
+
+        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        jedis.set(Long.toString(1L), "0");
+        operationsServices.withdraw(account.getId(), operation);
+
+        assertEquals(40.0, account.getBalanceAccount());
+    }
+
+    @Test
+    void whenTheWithdrawalIsMadeWithAFeeButThereIsNoBalance() {
+        Account account = new Account(1L, "1444", "22222", "1", TypeAccount.REGULARPERSON);
+        account.setBalanceAccount(150.0);
+
+        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        jedis.set(Long.toString(1L), "0");
+        operation.setAmount(150.0);
+
+        assertThrows(InvalidOperationExceptions.class, () ->  operationsServices.withdraw(account.getId(), operation));
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 

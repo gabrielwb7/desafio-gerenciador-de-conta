@@ -1,6 +1,5 @@
 package com.desafio.manageraccount.services;
 
-import com.desafio.manageraccount.config.ProduceMessage;
 import com.desafio.manageraccount.dto.request.AccountDTO;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Client;
@@ -13,16 +12,22 @@ import com.desafio.manageraccount.services.exceptions.CouldNotCompleteTheRequest
 import com.desafio.manageraccount.services.exceptions.DocumentationException;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
 @Service
-public class AccountService extends ProduceMessage{
+public class AccountService {
 
     private final AccountRepository accountRepository;
     private final ClientRepository clientRepository;
     private final Random random = new Random();
+    private final JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost",6379);
+
+    private final ProduceMessage<String> producer = new ProduceMessage<>();
 
     public AccountService(AccountRepository accountRepository, ClientRepository clientRepository) {
         this.accountRepository = accountRepository;
@@ -33,8 +38,24 @@ public class AccountService extends ProduceMessage{
         return accountRepository.findAll();
     }
 
-    public Account insertAccount(AccountDTO accountDTO, Long id) {
+    public Account accountById(Long id) {
+        return idIsExist(id);
+    }
 
+    public Account consultWithdrawFree(Long id) {
+
+        Account account = idIsExist(id);
+        Jedis jedis = pool.getResource();
+
+        account.setQuantityWithdraw(Integer.valueOf(jedis.get(Long.toString(id))));
+
+        accountRepository.save(account);
+
+        jedis.close();
+        return account;
+    }
+
+    public Account insertAccount(AccountDTO accountDTO, Long id) throws IOException {
         Client client = clientIsExist(id);
 
         if (accountDTO.getTypeAccount() == TypeAccount.REGULARPERSON && client.getClientCPF() == null) {
@@ -49,20 +70,17 @@ public class AccountService extends ProduceMessage{
         createAccount.setQuantityWithdraw(createAccount.getTypeAccount().getMaxLimitWithdrawals());
         String data = String.format("{\"id\":%d,\"limitWithdraw\":\"%d\"}", accountRepository.nextID(), createAccount.getTypeAccount().getMaxLimitWithdrawals());
         try {
-            sendMessage("NEW_ACCOUNT", data);
+            producer.sendMessage("NEW_ACCOUNT", data);
+            accountRepository.save(createAccount);
+
+            return createAccount;
         } catch (Exception e) {
             throw new CouldNotCompleteTheRequest("Serviço indisponivel");
         }
-        return accountRepository.save(createAccount);
     }
 
-    public void delete(Long id) {
-        idIsExist(id);
-        accountRepository.deleteById(id);
-    }
-
-    public Account updateAccount(Long id, AccountDTO accountDTO) {
-        Account beforeAccount = idIsExist(id);
+    public Account updateAccount(AccountDTO accountDTO) {
+        Account beforeAccount = idIsExist(accountDTO.getId());
         Account updateAccount = validatesDataAccount(accountDTO);
 
         beforeAccount.setNumberAccount(updateAccount.getNumberAccount());
@@ -72,20 +90,9 @@ public class AccountService extends ProduceMessage{
         return accountRepository.save(beforeAccount);
     }
 
-    public Account consultWithdrawFree(Long id) {
-
-        Account account = idIsExist(id);
-        Jedis jedis = new Jedis();
-
-        account.setQuantityWithdraw(Integer.valueOf(jedis.get(Long.toString(id))));
-
-        accountRepository.save(account);
-
-        return account;
-    }
-
-    public Account accountById(Long id) {
-        return idIsExist(id);
+    public void delete(Long id) {
+        idIsExist(id);
+        accountRepository.deleteById(id);
     }
 
     private Account idIsExist(Long id) {

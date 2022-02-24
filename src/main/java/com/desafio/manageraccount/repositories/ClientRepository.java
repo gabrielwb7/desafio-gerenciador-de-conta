@@ -9,6 +9,5 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Client findByClientCPF (String clientCPF);
     Client findByClientCNPJ (String clientCNPJ);
-//    Client findByClientCPFAndClientCNPJ (String clientCPF, String clientCNPJ);
 
 }

@@ -1,6 +1,5 @@
 package com.desafio.manageraccount.services;
 
-import com.desafio.manageraccount.config.ProduceMessage;
 import com.desafio.manageraccount.entities.Account;
 import com.desafio.manageraccount.entities.Operations;
 import com.desafio.manageraccount.entities.Tax;
@@ -11,15 +10,20 @@ import com.desafio.manageraccount.repositories.OperationsRepository;
 import com.desafio.manageraccount.services.exceptions.*;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.List;
 
 @Service
-public class OperationsServices extends ProduceMessage {
+public class OperationsServices {
 
     private final OperationsRepository operationsRepository;
     private final AccountRepository accountRepository;
     private final Tax tax = new Tax();
+    private final JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost",6379);
+
+    private final ProduceMessage producer = new ProduceMessage();
 
     public OperationsServices(OperationsRepository operationsRepository, AccountRepository accountRepository) {
         this.operationsRepository = operationsRepository;
@@ -85,12 +89,13 @@ public class OperationsServices extends ProduceMessage {
     public Operations withdraw(Long id, Operations operation) {
         operation.setTypeOperations(TypeOperations.WITHDRAW);
         double valueOfOperation;
+        Jedis jedis = pool.getResource();
 
         Account account = accountIsExist(id);
 
         validateAmountValue(account, operation);
 
-        if (verifyWithdrawals(account.getId()) != 0) {
+        if (Integer.parseInt(jedis.get(Long.toString(id))) != 0) {
             valueOfOperation = account.getBalanceAccount() - operation.getAmount();
             operation.setTypeStatus(TypeStatus.CONCLUDED);
         }
@@ -106,7 +111,7 @@ public class OperationsServices extends ProduceMessage {
 
         String data = String.format("{\"idAccount\":%d,\"amount\":\"%.2f\",\"date\":\"%s\",\"tax\":\"%.2f\"}", operation.getAccount().getId(), operation.getAmount(), operation.getDateOperation(), operation.getTax());
         try {
-            sendMessage("NEW_WITHDRAW", data);
+           producer.sendMessage("NEW_WITHDRAW", data);
 
             account.setBalanceAccount(valueOfOperation);
             accountRepository.save(account);
@@ -117,10 +122,6 @@ public class OperationsServices extends ProduceMessage {
         }
     }
 
-    private Integer verifyWithdrawals(Long id) {
-        Jedis jedis = new Jedis();
-        return Integer.parseInt(jedis.get(Long.toString(id)));
-    }
 
     private Operations idIsExist(Long id) {
         return operationsRepository.findById(id).orElseThrow(() -> new BankingOperationsNotFound(id));

@@ -39,6 +39,7 @@ public class ClientServicesTest {
     @InjectMocks
     private ClientService clientService;
 
+
     @Test
     void whenListClientsIsCalledThenReturnAnEmptyListOfClients() {
 

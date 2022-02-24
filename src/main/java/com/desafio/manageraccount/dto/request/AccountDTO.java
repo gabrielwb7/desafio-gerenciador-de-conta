@@ -8,7 +8,6 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class AccountDTO {
