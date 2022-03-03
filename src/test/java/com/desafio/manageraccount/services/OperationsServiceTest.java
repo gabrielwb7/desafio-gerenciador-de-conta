@@ -117,7 +117,7 @@ public class OperationsServiceTest {
     void whenInformedInvalidIDAccountForOperation() {
         Account account = accountDTO.toDTO();
 
-        when(accountRepository.save(account)).thenReturn(null);
+        when(accountRepository.findById(accountDTO.getId())).thenReturn(null);
 
         assertThrows(AccountNotFoundException.class, () -> operationsServices.deposit(account.getId(), operation));
         assertThrows(AccountNotFoundException.class, () -> operationsServices.bankTransfer(account.getId(), operation));
@@ -133,7 +133,6 @@ public class OperationsServiceTest {
                 -100.0, null, 0.0, null, null, null, null);
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
 
         assertThrows(InvalidOperationExceptions.class, () -> operationsServices.deposit(account.getId(), operationInvalidAmount));
         assertThrows(InvalidOperationExceptions.class, () -> operationsServices.bankTransfer(account.getId(), operationInvalidAmount));
@@ -145,7 +144,6 @@ public class OperationsServiceTest {
         Account account = accountDTO.toDTO();
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
 
         assertThrows(InvalidOperationExceptions.class, () -> operationsServices.bankTransfer(account.getId(), operation));
         assertThrows(InvalidOperationExceptions.class, () -> operationsServices.withdraw(account.getId(), operation));
@@ -174,7 +172,6 @@ public class OperationsServiceTest {
         account.setBalanceAccount(150.0);
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
 
         assertThrows(DocumentationException.class, () -> operationsServices.bankTransfer(account.getId(), operationInvalidData));
     }
@@ -188,9 +185,6 @@ public class OperationsServiceTest {
                 100.0, null, 0.0, "22222", "1444", "1", null);
 
         account.setBalanceAccount(150.0);
-
-        when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
 
         assertThrows(AccountNotFoundException.class, () -> operationsServices.bankTransfer(account.getId(), operationInvalidData));
     }
@@ -208,10 +202,8 @@ public class OperationsServiceTest {
         account.setBalanceAccount(150.0);
 
         when(accountRepository.findById(accountDestiny.getId())).thenReturn(Optional.of(accountDestiny));
-        when(accountRepository.save(accountDestiny)).thenReturn(accountDestiny);
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
         when(accountRepository.findByAgencyAndNumberAccountAndVerifyDigit("1444","22222", "1")).thenReturn(accountDestiny);
 
         operationsServices.bankTransfer(account.getId(),operationBankTransfer);
@@ -226,7 +218,6 @@ public class OperationsServiceTest {
         account.setBalanceAccount(150.0);
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
 
         jedis.set(Long.toString(1L), "5");
         operationsServices.withdraw(account.getId(), operation);
@@ -240,7 +231,6 @@ public class OperationsServiceTest {
         account.setBalanceAccount(150.0);
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
 
         jedis.set(Long.toString(1L), "0");
         operationsServices.withdraw(account.getId(), operation);
@@ -254,7 +244,6 @@ public class OperationsServiceTest {
         account.setBalanceAccount(150.0);
 
         when(accountRepository.findById(account.getId())).thenReturn(Optional.of(account));
-        when(accountRepository.save(account)).thenReturn(account);
 
         jedis.set(Long.toString(1L), "0");
         operation.setAmount(150.0);
